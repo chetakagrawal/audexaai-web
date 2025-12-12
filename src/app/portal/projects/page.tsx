@@ -4,8 +4,24 @@ import MetricCard from '@/components/portal/MetricCard';
 import ProjectCard from '@/components/portal/ProjectCard';
 import Button from '@/components/ui/Button';
 
+interface Project {
+  id: number;
+  name: string;
+  status: string;
+  statusColor: 'blue' | 'orange' | 'green';
+  client: string;
+  period: string;
+  progress: number;
+  controls: number;
+  evidence: number;
+  validated: number;
+  issues: number;
+  assignedUsers: string[];
+  lastUpdated: string;
+}
+
 export default function ProjectsPage() {
-  const projects = [
+  const projects: Project[] = [
     {
       id: 1,
       name: 'Q4 2024 SOX Audit',
