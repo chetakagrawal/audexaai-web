@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface LogoProps {
   showTagline?: boolean;
@@ -19,10 +20,11 @@ export default function Logo({ showTagline = false, size = 'md', href, className
     <div className={`flex items-center gap-3 ${className}`}>
       {/* Logo Image */}
       <div className={`${sizes[size].icon} flex-shrink-0 relative`}>
-        <img
+        <Image
           src="/images/logo.jpeg"
           alt="Audexa AI Logo"
-          className="w-full h-full object-contain"
+          fill
+          className="object-contain"
         />
       </div>
 

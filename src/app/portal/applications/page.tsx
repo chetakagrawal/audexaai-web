@@ -290,7 +290,7 @@ export default function ApplicationsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant={getCategoryBadgeColor(app.category) as any}>
+                      <Badge variant={getCategoryBadgeColor(app.category) as 'info' | 'success' | 'warning'}>
                         {app.category}
                       </Badge>
                     </td>
