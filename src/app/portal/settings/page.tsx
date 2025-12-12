@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import DashboardLayout from '@/components/portal/DashboardLayout';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -222,6 +223,7 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+    </DashboardLayout>
   );
 }
 

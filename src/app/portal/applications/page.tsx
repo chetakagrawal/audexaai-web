@@ -1,4 +1,5 @@
 import React from 'react';
+import DashboardLayout from '@/components/portal/DashboardLayout';
 import MetricCard from '@/components/portal/MetricCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -321,6 +322,7 @@ export default function ApplicationsPage() {
           </div>
         </div>
       </div>
+    </DashboardLayout>
   );
 }
 

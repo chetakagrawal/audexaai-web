@@ -1,4 +1,5 @@
 import React from 'react';
+import DashboardLayout from '@/components/portal/DashboardLayout';
 import MetricCard from '@/components/portal/MetricCard';
 import ProjectCard from '@/components/portal/ProjectCard';
 import Button from '@/components/ui/Button';
@@ -161,6 +162,7 @@ export default function ProjectsPage() {
           ))}
         </div>
       </div>
+    </DashboardLayout>
   );
 }
 

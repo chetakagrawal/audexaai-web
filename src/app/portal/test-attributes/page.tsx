@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import DashboardLayout from '@/components/portal/DashboardLayout';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
@@ -224,6 +225,7 @@ export default function TestAttributesPage() {
           })}
         </div>
       </div>
+    </DashboardLayout>
   );
 }
 
