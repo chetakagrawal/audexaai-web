@@ -1,13 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import Logo from '@/components/ui/Logo';
+import { authApi } from '@/lib/api';
+import { extractTenantSlugFromEmail } from '@/lib/auth';
 
 export default function LoginPage() {
-  const [loginMethod, setLoginMethod] = useState<'sso' | 'direct'>('sso');
-  const [companyDomain, setCompanyDomain] = useState('');
+  const router = useRouter();
+  const [loginMethod, setLoginMethod] = useState<'sso' | 'direct'>('direct');
+  const [email, setEmail] = useState('');
+  const [tenantSlug, setTenantSlug] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted (client-side only)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSSOLogin = () => {
     // TODO: Implement SSO flow
@@ -17,14 +30,49 @@ export default function LoginPage() {
     alert('SSO login coming soon! This will redirect to your company\'s SSO provider.');
   };
 
-  const handleDirectLogin = (e: React.FormEvent) => {
+  const handleDirectLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement direct login
-    // 1. Validate credentials
-    // 2. Check if user is admin/internal
-    // 3. Create session
-    alert('Direct login coming soon!');
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // Extract tenant slug from email if not provided
+      const slug = tenantSlug || extractTenantSlugFromEmail(email);
+
+      if (!email) {
+        setError('Please enter your email address');
+        setIsLoading(false);
+        return;
+      }
+
+      // Call dev-login endpoint
+      await authApi.devLogin(email, slug);
+
+      // Redirect to dashboard
+      router.push('/portal/dashboard/');
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'Login failed. Please try again.';
+      
+      // More user-friendly error messages
+      let displayError = errorMessage;
+      if (errorMessage.includes('Cannot connect to backend')) {
+        displayError = 'Cannot connect to backend. Make sure the backend is running on http://localhost:8000';
+      } else if (errorMessage.includes('Failed to fetch')) {
+        displayError = 'Network error. Check that the backend is running and CORS is configured.';
+      }
+      
+      setError(displayError);
+      setIsLoading(false);
+      console.error('Login error:', err);
+    }
   };
+
+  // Show nothing until mounted (prevents hydration issues)
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4 py-12">
@@ -86,8 +134,8 @@ export default function LoginPage() {
                 <input
                   type="email"
                   id="email"
-                  value={companyDomain}
-                  onChange={(e) => setCompanyDomain(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="you@company.com"
                   disabled
@@ -124,10 +172,16 @@ export default function LoginPage() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <p className="text-sm text-amber-800">
-                    Admins & Internal Users: Use direct email/password login
+                    Dev Login: Enter your email to authenticate. Tenant will be auto-detected from email domain.
                   </p>
                 </div>
               </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="direct-email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -136,37 +190,41 @@ export default function LoginPage() {
                 <input
                   type="email"
                   id="direct-email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="admin@audexaai.com"
-                  disabled
+                  placeholder="your@email.com"
+                  required
+                  disabled={isLoading}
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
+                <label htmlFor="tenant-slug" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tenant Slug (optional - auto-detected from email)
                 </label>
                 <input
-                  type="password"
-                  id="password"
+                  type="text"
+                  id="tenant-slug"
+                  value={tenantSlug}
+                  onChange={(e) => setTenantSlug(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="••••••••"
-                  disabled
+                  placeholder="company-name"
+                  disabled={isLoading}
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Leave empty to auto-detect from email domain
+                </p>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" disabled />
-                  <span className="ml-2 text-gray-600">Remember me</span>
-                </label>
-                <Link href="/#waitlist" className="text-primary-600 hover:text-primary-700">
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button variant="primary" size="lg" type="submit" className="w-full" disabled>
-                Sign In
+              <Button 
+                variant="primary" 
+                size="lg" 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
           )}

@@ -1,0 +1,45 @@
+# Cursor Project Rules — Frontend (Next.js • TypeScript • React • pnpm)
+
+## Non-negotiables
+- **TDD is mandatory for non-trivial logic:** Write failing tests first, then implement, then refactor.
+- **No backward-compat requirement in dev mode:** API contract can change quickly; update the frontend to match and update tests.
+
+## Architecture
+- Centralize API calls in a dedicated layer (`lib/api/` or `services/api/`).
+- No scattered `fetch()` across random components.
+- Centralize auth token handling (cookies/storage) behind one abstraction.
+- Keep API contracts typed (interfaces/zod schemas). Avoid `any`.
+
+## Testing
+- Prefer `vitest` + `@testing-library/react` for components.
+- Hooks/utilities get unit tests with vitest.
+- For end-to-end flows: use Playwright if already present; otherwise keep to RTL integration tests.
+- Tests must be deterministic (no real network; mock fetch).
+
+## UI quality
+- Accessible by default: semantic HTML, labeled inputs, keyboard-friendly.
+- Avoid prop-drilling when it gets messy; use context/store sparingly and cleanly.
+- Keep components small and composable.
+
+## Code quality
+- Strict TypeScript: no `any` unless justified.
+- Prefer pure functions for business-ish logic.
+- No console spam; only purposeful logging (and avoid secrets).
+
+## Required “self-check” before final response
+In your final response, include:
+1) **Files changed**
+2) **How to run tests:** `pnpm test`
+3) **What user paths were tested**
+4) Any UI/contract changes that required updating frontend types
+
+---
+
+## Task Template (copy/paste for each feature)
+**Task:** Implement <feature> using TDD. No backward-compat needed in dev.  
+**Steps:**  
+1) Add failing tests first (RTL/vitest).  
+2) Implement minimal code to pass.  
+3) Add edge/failure tests.  
+4) Ensure typed API contract matches backend.  
+5) Provide final summary + self-check.
