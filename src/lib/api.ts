@@ -43,13 +43,18 @@ export async function apiRequest<T>(
   const token = getAuthToken();
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Merge additional headers from options
+  if (options.headers) {
+    const optHeaders = options.headers as Record<string, string>;
+    Object.assign(headers, optHeaders);
   }
 
   try {
