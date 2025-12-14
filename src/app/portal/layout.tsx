@@ -21,6 +21,12 @@ export default function PortalLayout({
   const pathname = usePathname();
 
   useEffect(() => {
+    // Skip auth check if disabled via environment variable
+    const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === 'true';
+    if (disableAuth) {
+      return; // Allow access without authentication
+    }
+
     // Check if user is authenticated
     const token = getAuthToken();
     

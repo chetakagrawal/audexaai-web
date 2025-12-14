@@ -416,3 +416,152 @@ export const setupApi = {
   },
 };
 
+/**
+ * Projects API endpoints
+ */
+export const projectsApi = {
+  /**
+   * List all projects for the current tenant
+   */
+  async listProjects() {
+    return apiRequest<Array<{
+      id: string;
+      tenant_id: string;
+      created_by_membership_id: string;
+      name: string;
+      status: string;
+      period_start: string | null;
+      period_end: string | null;
+      created_at: string;
+      updated_at: string;
+    }>>('/v1/projects');
+  },
+
+  /**
+   * Get a specific project by ID
+   */
+  async getProject(projectId: string) {
+    return apiRequest<{
+      id: string;
+      tenant_id: string;
+      created_by_membership_id: string;
+      name: string;
+      status: string;
+      period_start: string | null;
+      period_end: string | null;
+      created_at: string;
+      updated_at: string;
+    }>(`/v1/projects/${projectId}`);
+  },
+
+  /**
+   * Create a new project
+   */
+  async createProject(data: {
+    name: string;
+    status?: string;
+    period_start?: string | null;
+    period_end?: string | null;
+  }) {
+    return apiRequest<{
+      id: string;
+      tenant_id: string;
+      created_by_membership_id: string;
+      name: string;
+      status: string;
+      period_start: string | null;
+      period_end: string | null;
+      created_at: string;
+      updated_at: string;
+    }>('/v1/projects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * List controls for a project
+   */
+  async listProjectControls(projectId: string) {
+    return apiRequest<Array<{
+      id: string;
+      tenant_id: string;
+      project_id: string;
+      control_id: string;
+      is_key_override: boolean | null;
+      frequency_override: string | null;
+      notes: string | null;
+      created_at: string;
+    }>>(`/v1/projects/${projectId}/controls`);
+  },
+
+  /**
+   * Add a control to a project
+   */
+  async addControlToProject(projectId: string, data: {
+    control_id: string;
+    is_key_override?: boolean | null;
+    frequency_override?: string | null;
+    notes?: string | null;
+  }) {
+    return apiRequest<{
+      id: string;
+      tenant_id: string;
+      project_id: string;
+      control_id: string;
+      is_key_override: boolean | null;
+      frequency_override: string | null;
+      notes: string | null;
+      created_at: string;
+    }>(`/v1/projects/${projectId}/controls`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
+/**
+ * Controls API endpoints
+ */
+export const controlsApi = {
+  /**
+   * List all controls for the current tenant
+   */
+  async listControls() {
+    return apiRequest<Array<{
+      id: string;
+      tenant_id: string;
+      created_by_membership_id: string;
+      control_code: string;
+      name: string;
+      category: string | null;
+      risk_rating: string | null;
+      control_type: string | null;
+      frequency: string | null;
+      is_key: boolean;
+      is_automated: boolean;
+      created_at: string;
+    }>>('/v1/controls');
+  },
+
+  /**
+   * Get a specific control by ID
+   */
+  async getControl(controlId: string) {
+    return apiRequest<{
+      id: string;
+      tenant_id: string;
+      created_by_membership_id: string;
+      control_code: string;
+      name: string;
+      category: string | null;
+      risk_rating: string | null;
+      control_type: string | null;
+      frequency: string | null;
+      is_key: boolean;
+      is_automated: boolean;
+      created_at: string;
+    }>(`/v1/controls/${controlId}`);
+  },
+};
+

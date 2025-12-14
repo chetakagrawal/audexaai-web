@@ -1,7 +1,10 @@
+'use client';
+
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Project {
-  id: number;
+  id: number | string;
   name: string;
   status: string;
   statusColor: 'blue' | 'orange' | 'green';
@@ -21,6 +24,11 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+  const router = useRouter();
+  
+  const handleClick = () => {
+    router.push(`/portal/projects/${project.id}`);
+  };
   const statusColors = {
     blue: 'bg-blue-100 text-blue-800',
     orange: 'bg-orange-100 text-orange-800',
@@ -41,7 +49,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div 
+      onClick={handleClick}
+      className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
