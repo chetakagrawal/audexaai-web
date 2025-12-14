@@ -4,7 +4,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiRequest } from './api';
 
 /**
  * Check if an API error indicates SSO setup is required
