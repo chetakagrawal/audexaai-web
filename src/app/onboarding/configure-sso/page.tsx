@@ -121,7 +121,21 @@ export default function ConfigureSSOPage() {
     setIsLoading(true);
 
     try {
-      let config: any;
+      let config: {
+        provider_type: 'saml' | 'oidc';
+        saml_config?: {
+          metadata_url?: string;
+          entity_id?: string;
+          sso_url?: string;
+          x509_certificate?: string;
+        };
+        oidc_config?: {
+          client_id: string;
+          client_secret: string;
+          discovery_url: string;
+          redirect_uri?: string;
+        };
+      };
 
       if (providerType === 'saml') {
         const validationError = validateSAMLConfig();
@@ -183,7 +197,21 @@ export default function ConfigureSSOPage() {
     setIsLoading(true);
 
     try {
-      let config: any;
+      let config: {
+        provider_type: 'saml' | 'oidc';
+        saml_config?: {
+          metadata_url?: string;
+          entity_id?: string;
+          sso_url?: string;
+          x509_certificate?: string;
+        };
+        oidc_config?: {
+          client_id: string;
+          client_secret: string;
+          discovery_url: string;
+          redirect_uri?: string;
+        };
+      };
 
       if (providerType === 'saml') {
         const validationError = validateSAMLConfig();
