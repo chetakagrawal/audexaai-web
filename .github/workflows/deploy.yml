@@ -36,6 +36,7 @@ jobs:
         run: pnpm build
         env:
           NEXT_EXPORT: 'true'
+          NEXT_PUBLIC_DISABLE_AUTH: ${{ secrets.NEXT_PUBLIC_DISABLE_AUTH || 'false' }}
 
       # 5) Configure AWS credentials
       - name: Configure AWS credentials
