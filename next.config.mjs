@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only use static export for production builds
-  // Remove output: "export" for dev server to work properly
-  // output: "export", // Commented out for dev server
+  // Enable static export only for production builds (CI/CD deployment)
+  // Dev server needs this disabled to work properly
+  ...(process.env.NEXT_EXPORT === 'true' && { output: 'export' }),
   trailingSlash: true,
   images: {
     unoptimized: true,
