@@ -6,18 +6,6 @@ import Button from '@/components/ui/Button';
 import Logo from '@/components/ui/Logo';
 import { setupApi, setSetupToken, removeSetupToken } from '@/lib/api';
 
-interface TokenValidationResponse {
-  valid: boolean;
-  user_id?: string;
-  tenant_id?: string;
-  signup_id?: string;
-  user_name?: string;
-  user_email?: string;
-  tenant_name?: string;
-  tenant_slug?: string;
-  reason?: string;
-}
-
 export default function OnboardingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +18,6 @@ export default function OnboardingPage() {
     tenant_name: string;
     tenant_slug: string;
   } | null>(null);
-  const [currentToken, setCurrentToken] = useState<string | null>(null);
 
   // Get token from URL query param
   const tokenFromUrl = searchParams.get('token');
@@ -66,7 +53,6 @@ export default function OnboardingPage() {
 
         // Token is valid - store it and user info
         setSetupToken(tokenFromUrl);
-        setCurrentToken(tokenFromUrl);
 
         if (validation.user_name && validation.user_email && validation.tenant_name && validation.tenant_slug) {
           setUserInfo({
@@ -161,8 +147,8 @@ export default function OnboardingPage() {
                 <div className="text-sm text-red-800">
                   <p className="font-medium mb-1">What to do:</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>Check that you're using the most recent setup email</li>
-                    <li>Ensure the setup link hasn't expired (tokens expire after 7 days)</li>
+                    <li>Check that you&apos;re using the most recent setup email</li>
+                    <li>Ensure the setup link hasn&apos;t expired (tokens expire after 7 days)</li>
                     <li>Contact your administrator if you need a new setup token</li>
                   </ul>
                 </div>
@@ -224,7 +210,7 @@ export default function OnboardingPage() {
               Welcome to Audexa AI, {userInfo.name}!
             </h1>
             <p className="text-lg text-gray-600">
-              Let's set up Single Sign-On (SSO) for <strong>{userInfo.tenant_name}</strong>
+              Let&apos;s set up Single Sign-On (SSO) for <strong>{userInfo.tenant_name}</strong>
             </p>
           </div>
 
@@ -268,12 +254,12 @@ export default function OnboardingPage() {
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               <div className="text-sm text-blue-800">
-                <p className="font-medium mb-2">What's Next?</p>
+                <p className="font-medium mb-2">What&apos;s Next?</p>
                 <p className="mb-2">
-                  You'll configure your SSO provider (SAML 2.0 or OIDC) on the next page. This typically takes 5-10 minutes and requires admin access to your SSO provider (Okta, Azure AD, Google Workspace, etc.).
+                  You&apos;ll configure your SSO provider (SAML 2.0 or OIDC) on the next page. This typically takes 5-10 minutes and requires admin access to your SSO provider (Okta, Azure AD, Google Workspace, etc.).
                 </p>
                 <p>
-                  Once configured, all users from <strong>{userInfo.tenant_name}</strong> will be able to sign in using your company's SSO.
+                  Once configured, all users from <strong>{userInfo.tenant_name}</strong> will be able to sign in using your company&apos;s SSO.
                 </p>
               </div>
             </div>
