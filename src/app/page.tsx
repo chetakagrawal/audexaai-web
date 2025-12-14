@@ -9,7 +9,6 @@ import {
   SecuritySection,
   PilotPricing,
   DemoSection,
-  WaitlistSection,
 } from '@/components/landing';
 
 export default function Home() {
@@ -24,7 +23,6 @@ export default function Home() {
       <SecuritySection />
       <PilotPricing />
       <DemoSection />
-      <WaitlistSection />
       <Footer />
     </main>
   );

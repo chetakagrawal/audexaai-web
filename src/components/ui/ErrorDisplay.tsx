@@ -76,9 +76,9 @@ export default function ErrorDisplay({
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-500">
             Need help?{' '}
-            <Link href="/#waitlist" className="text-primary-600 hover:text-primary-700">
+            <a href="mailto:support@audexaai.com" className="text-primary-600 hover:text-primary-700">
               Contact Support
-            </Link>
+            </a>
           </p>
         </div>
       </div>

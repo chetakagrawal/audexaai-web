@@ -47,8 +47,8 @@ export default function NotFound() {
             <Link href="/login" className="text-primary-600 hover:text-primary-700">
               Login
             </Link>
-            <Link href="/#waitlist" className="text-primary-600 hover:text-primary-700">
-              Waitlist
+            <Link href="/pilot/" className="text-primary-600 hover:text-primary-700">
+              Join Pilot
             </Link>
           </div>
         </div>

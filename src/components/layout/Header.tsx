@@ -22,6 +22,11 @@ export default function Header() {
     setIsMenuOpen(false);
   };
 
+  const handleJoinPilot = () => {
+    router.push('/pilot/');
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-sm shadow-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,8 +58,8 @@ export default function Header() {
             <Button variant="outline" size="sm" onClick={() => scrollToSection('demo')}>
               See Demo
             </Button>
-            <Button variant="primary" size="sm" onClick={() => scrollToSection('waitlist')}>
-              Join Waitlist
+            <Button variant="primary" size="sm" onClick={handleJoinPilot}>
+              Join Free Pilot
             </Button>
           </div>
 
@@ -95,8 +100,8 @@ export default function Header() {
               <Button variant="outline" size="sm" onClick={() => scrollToSection('demo')} className="w-full">
                 See Demo
               </Button>
-              <Button variant="primary" size="sm" onClick={() => scrollToSection('waitlist')} className="w-full">
-                Join Waitlist
+              <Button variant="primary" size="sm" onClick={handleJoinPilot} className="w-full">
+                Join Free Pilot
               </Button>
             </div>
           </div>

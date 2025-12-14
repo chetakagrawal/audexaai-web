@@ -1,14 +1,21 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 
 export default function Hero() {
+  const router = useRouter();
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const goToPilot = () => {
+    router.push('/pilot/');
   };
 
   return (
@@ -39,9 +46,9 @@ export default function Hero() {
               <Button 
                 variant="primary" 
                 size="lg"
-                onClick={() => scrollToSection('waitlist')}
+                onClick={goToPilot}
               >
-                Join Waitlist →
+                Join Free Pilot →
               </Button>
               <Button 
                 variant="outline" 
