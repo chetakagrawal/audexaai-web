@@ -2,15 +2,18 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import Button from '@/components/ui/Button';
+import { signupApi } from '@/lib/api';
 
 interface FormData {
   email: string;
+  fullName: string;
   companyName: string;
   isIndividual: boolean;
 }
 
 interface FormErrors {
   email?: string;
+  fullName?: string;
   companyName?: string;
 }
 
@@ -41,6 +44,7 @@ export default function PilotSignupForm() {
   const [step, setStep] = useState<FormStep>(1);
   const [formData, setFormData] = useState<FormData>({
     email: '',
+    fullName: '',
     companyName: '',
     isIndividual: false,
   });
@@ -111,6 +115,14 @@ export default function PilotSignupForm() {
   }, [formData.email]);
 
   /**
+   * Extract company domain from email
+   */
+  const extractCompanyDomain = useCallback((email: string): string | undefined => {
+    const domain = email.split('@')[1];
+    return domain || undefined;
+  }, []);
+
+  /**
    * Handle final submission
    */
   const handleFinalSubmit = useCallback(async (e: React.FormEvent) => {
@@ -119,23 +131,57 @@ export default function PilotSignupForm() {
     setSubmitError(null);
 
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Extract company domain from email if available
+      const companyDomain = !formData.isIndividual ? extractCompanyDomain(formData.email) : undefined;
 
-      // Simulate API call
-      console.log('Pilot signup submitted:', {
-        email: formData.email,
-        companyName: formData.isIndividual ? 'Individual' : formData.companyName,
-      });
+      // Prepare signup data for backend
+      const signupData: {
+        email: string;
+        full_name?: string;
+        company_name?: string;
+        company_domain?: string;
+        requested_auth_mode?: 'sso' | 'direct';
+      } = {
+        email: formData.email.trim().toLowerCase(),
+        requested_auth_mode: 'direct', // Default to direct auth for pilot
+      };
+
+      // Add optional fields
+      if (!formData.isIndividual && formData.companyName.trim()) {
+        signupData.company_name = formData.companyName.trim();
+      }
+
+      if (companyDomain) {
+        signupData.company_domain = companyDomain;
+      }
+
+      // Call backend signup endpoint
+      const response = await signupApi.createSignup(signupData);
+
+      console.log('Pilot signup successful:', response);
 
       setIsSuccess(true);
     } catch (error) {
       console.error('Signup error:', error);
-      setSubmitError('Something went wrong. Please try again.');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Something went wrong. Please try again.';
+      
+      // More user-friendly error messages
+      let displayError = errorMessage;
+      if (errorMessage.includes('Cannot connect to backend')) {
+        displayError = 'Cannot connect to backend. Make sure the backend is running.';
+      } else if (errorMessage.includes('Failed to fetch')) {
+        displayError = 'Network error. Please check your connection and try again.';
+      } else if (errorMessage.includes('email')) {
+        displayError = 'Invalid email address. Please check and try again.';
+      }
+      
+      setSubmitError(displayError);
     } finally {
       setIsLoading(false);
     }
-  }, [formData]);
+  }, [formData, extractCompanyDomain]);
 
   /**
    * Go back to step 1
@@ -150,7 +196,7 @@ export default function PilotSignupForm() {
    */
   const handleReset = useCallback(() => {
     setStep(1);
-    setFormData({ email: '', companyName: '', isIndividual: false });
+    setFormData({ email: '', fullName: '', companyName: '', isIndividual: false });
     setErrors({});
     setTouched({});
     setIsLoading(false);
@@ -161,22 +207,24 @@ export default function PilotSignupForm() {
   // Success state
   if (isSuccess) {
     return (
-      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-lg mx-auto border border-white/20">
+      <div className="bg-gradient-to-br from-primary-500/20 to-primary-600/20 backdrop-blur-sm rounded-2xl p-8 max-w-lg mx-auto border border-primary-500/30">
         <div className="text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary-400 to-primary-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
             <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
           </div>
           <h3 className="text-2xl font-bold text-white mb-3">Welcome to the Pilot!</h3>
-          <p className="text-primary-100 mb-6">
-            We&apos;ve received your application. Check your inbox at{' '}
+          <p className="text-gray-300 mb-6">
+            {formData.fullName 
+              ? `Thanks, ${formData.fullName}! ` 
+              : ''}We&apos;ve received your application. Check your inbox at{' '}
             <span className="font-semibold text-white">{formData.email}</span>{' '}
             for next steps.
           </p>
           <button
             onClick={handleReset}
-            className="text-primary-200 hover:text-white underline transition-colors"
+            className="text-primary-400 hover:text-primary-300 underline transition-colors"
           >
             Submit another application
           </button>
@@ -186,7 +234,7 @@ export default function PilotSignupForm() {
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-lg mx-auto border border-white/20">
+    <div className="bg-gradient-to-br from-primary-500/20 to-primary-600/20 backdrop-blur-sm rounded-2xl p-8 max-w-lg mx-auto border border-primary-500/30">
       {/* Progress indicator */}
       <div className="flex items-center justify-center mb-8">
         <div className="flex items-center gap-3">
@@ -221,7 +269,7 @@ export default function PilotSignupForm() {
         <form onSubmit={handleStep1Submit}>
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-white mb-2">Join the Free Pilot</h3>
-            <p className="text-primary-100 text-sm">
+            <p className="text-gray-300 text-sm">
               Get early access to AI-powered audit validation
             </p>
           </div>
@@ -254,7 +302,7 @@ export default function PilotSignupForm() {
                   {errors.email}
                 </p>
               )}
-              <p className="mt-2 text-xs text-primary-200">
+              <p className="mt-2 text-xs text-gray-400">
                 Work or personal email — we welcome individuals and teams
               </p>
             </div>
@@ -282,25 +330,56 @@ export default function PilotSignupForm() {
         <form onSubmit={handleFinalSubmit}>
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-white mb-2">Almost there!</h3>
-            <p className="text-primary-100 text-sm">
+            <p className="text-gray-300 text-sm">
               Tell us a bit about yourself
             </p>
           </div>
 
           <div className="space-y-4">
+            {/* Full Name input */}
+            <div>
+                <label htmlFor="fullName" className="block text-sm font-medium text-white mb-2">
+                  Full Name
+                  <span className="text-gray-400 font-normal ml-1">(optional)</span>
+                </label>
+              <input
+                type="text"
+                id="fullName"
+                value={formData.fullName}
+                onChange={(e) => handleChange('fullName', e.target.value)}
+                onBlur={() => handleBlur('fullName')}
+                placeholder="John Doe"
+                className={`w-full px-4 py-3 rounded-lg bg-white/90 text-gray-900 placeholder-gray-500 
+                  focus:outline-none focus:ring-2 transition-all
+                  ${touched.fullName && errors.fullName 
+                    ? 'ring-2 ring-red-400 focus:ring-red-400' 
+                    : 'focus:ring-white'
+                  }`}
+                autoComplete="name"
+              />
+              {touched.fullName && errors.fullName && (
+                <p className="mt-2 text-sm text-red-300 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {errors.fullName}
+                </p>
+              )}
+            </div>
+
             {/* Individual toggle */}
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
               <div>
                 <span className="text-white font-medium">I&apos;m an individual</span>
-                <p className="text-primary-200 text-xs mt-0.5">Not part of a company</p>
+                <p className="text-gray-400 text-xs mt-0.5">Not part of a company</p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={formData.isIndividual}
                 onClick={handleIndividualToggle}
-                className={`relative w-12 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                  formData.isIndividual ? 'bg-emerald-500' : 'bg-white/30'
+                className={`relative w-12 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500/50 ${
+                  formData.isIndividual ? 'bg-primary-500' : 'bg-white/30'
                 }`}
               >
                 <span
@@ -316,7 +395,7 @@ export default function PilotSignupForm() {
               <div>
                 <label htmlFor="companyName" className="block text-sm font-medium text-white mb-2">
                   Company Name
-                  <span className="text-primary-200 font-normal ml-1">(optional)</span>
+                  <span className="text-gray-400 font-normal ml-1">(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -333,7 +412,7 @@ export default function PilotSignupForm() {
 
             {/* Email confirmation */}
             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-              <div className="flex items-center gap-2 text-primary-200 text-sm">
+              <div className="flex items-center gap-2 text-gray-400 text-sm">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
@@ -380,7 +459,7 @@ export default function PilotSignupForm() {
       )}
 
       {/* Privacy note */}
-      <p className="text-center text-primary-200 text-xs mt-6">
+      <p className="text-center text-gray-400 text-xs mt-6">
         No spam. Unsubscribe anytime. We respect your privacy.
       </p>
     </div>
