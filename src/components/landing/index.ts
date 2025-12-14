@@ -8,4 +8,5 @@ export { default as SecuritySection } from './SecuritySection';
 export { default as PilotPricing } from './PilotPricing';
 export { default as DemoSection } from './DemoSection';
 export { default as WaitlistSection } from './WaitlistSection';
+export { default as PilotSignupForm } from './PilotSignupForm';
 

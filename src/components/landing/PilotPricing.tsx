@@ -1,15 +1,15 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
 export default function PilotPricing() {
-  const scrollToWaitlist = () => {
-    const element = document.getElementById('waitlist');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+  const router = useRouter();
+
+  const goToPilot = () => {
+    router.push('/pilot/');
   };
 
   return (
@@ -72,7 +72,7 @@ export default function PilotPricing() {
               </li>
             </ul>
 
-            <Button variant="outline" size="lg" className="w-full" onClick={scrollToWaitlist}>
+            <Button variant="outline" size="lg" className="w-full" onClick={goToPilot}>
               Join Free Pilot
             </Button>
           </Card>
@@ -134,7 +134,7 @@ export default function PilotPricing() {
               </li>
             </ul>
 
-            <Button variant="primary" size="lg" className="w-full" onClick={scrollToWaitlist}>
+            <Button variant="primary" size="lg" className="w-full" onClick={goToPilot}>
               Contact Sales
             </Button>
           </Card>

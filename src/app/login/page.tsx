@@ -241,9 +241,9 @@ export default function LoginPage() {
                   <p className="text-xs text-primary-700 mb-3">
                     Multi-tenant SSO and direct login will be available for pilot program participants.
                   </p>
-                  <Link href="/#waitlist">
+                  <Link href="/pilot/">
                     <Button variant="primary" size="sm" className="w-full">
-                      Join Waitlist for Early Access
+                      Join Free Pilot
                     </Button>
                   </Link>
                 </div>
