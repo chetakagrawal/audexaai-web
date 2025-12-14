@@ -37,7 +37,17 @@ export default function ProjectDetailPage() {
   const projectId = params.id as string;
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
-  const [project, setProject] = useState<any>(null);
+  const [project, setProject] = useState<{
+    id: string;
+    tenant_id: string;
+    created_by_membership_id: string;
+    name: string;
+    status: string;
+    period_start: string | null;
+    period_end: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null>(null);
   const [projectControls, setProjectControls] = useState<ProjectControl[]>([]);
   const [availableControls, setAvailableControls] = useState<Control[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,14 +75,6 @@ export default function ProjectDetailPage() {
     }
   }, [projectId, router]);
 
-  // Fetch project controls when controls tab is active
-  useEffect(() => {
-    if (activeTab === 'controls' && projectId) {
-      fetchProjectControls();
-      fetchAvailableControls();
-    }
-  }, [activeTab, projectId]);
-
   const fetchProjectControls = async () => {
     try {
       setIsLoadingControls(true);
@@ -93,6 +95,15 @@ export default function ProjectDetailPage() {
       console.error('Failed to fetch available controls:', error);
     }
   };
+
+  // Fetch project controls when controls tab is active
+  useEffect(() => {
+    if (activeTab === 'controls' && projectId) {
+      fetchProjectControls();
+      fetchAvailableControls();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, projectId]);
 
   const handleAddControl = async () => {
     if (!selectedControlId) return;

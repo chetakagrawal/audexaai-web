@@ -20,7 +20,7 @@ interface ApiProject {
 }
 
 interface Project {
-  id: number;
+  id: string | number;
   name: string;
   status: string;
   statusColor: 'blue' | 'orange' | 'green';
