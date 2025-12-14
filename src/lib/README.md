@@ -5,6 +5,7 @@
 1. Create a `.env.local` file in the project root:
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_DEV_MODE=true  # Set to 'true' to bypass login/auth when backend is not available
 ```
 
 2. For production, update the URL to your deployed backend.

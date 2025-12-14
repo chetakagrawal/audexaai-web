@@ -21,6 +21,12 @@ export default function PortalLayout({
   const pathname = usePathname();
 
   useEffect(() => {
+    // Skip auth check in dev mode (when backend is not available)
+    const devMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+    if (devMode) {
+      return; // Allow access without authentication in dev mode
+    }
+
     // Check if user is authenticated
     const token = getAuthToken();
     

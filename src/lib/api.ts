@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
 export interface ApiError {
   detail: string;
@@ -90,6 +91,19 @@ export async function apiRequest<T>(
   }
 
   try {
+    // In dev mode, if backend is not available, return empty data structure
+    if (DEV_MODE) {
+      console.log(`[API] Dev mode: Skipping request to: ${url}`);
+      // Return empty object/array based on endpoint - this allows UI to render
+      if (endpoint.includes('/memberships')) {
+        return { default_membership_id: null, memberships: [] } as T;
+      }
+      if (endpoint.includes('/me')) {
+        return { id: '', email: 'dev@example.com', name: 'Dev User', is_platform_admin: false } as T;
+      }
+      return {} as T;
+    }
+
     console.log(`[API] Making request to: ${url}`);
     const response = await fetch(url, {
       ...options,
@@ -128,6 +142,20 @@ export async function apiRequest<T>(
     return data;
   } catch (err) {
     console.error(`[API] Request failed:`, err);
+    
+    // In dev mode, gracefully handle network errors
+    if (DEV_MODE && err instanceof TypeError && err.message === 'Failed to fetch') {
+      console.warn(`[API] Dev mode: Backend not available, returning empty data`);
+      // Return empty structure based on endpoint
+      if (endpoint.includes('/memberships')) {
+        return { default_membership_id: null, memberships: [] } as T;
+      }
+      if (endpoint.includes('/me')) {
+        return { id: '', email: 'dev@example.com', name: 'Dev User', is_platform_admin: false } as T;
+      }
+      return {} as T;
+    }
+    
     // Handle network errors, CORS errors, etc.
     if (err instanceof TypeError && err.message === 'Failed to fetch') {
       throw new Error(
