@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { authApi } from '@/lib/api';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -83,6 +84,49 @@ const menuItems = [
 export default function Sidebar({ isOpen, onToggle, isCollapsed, onCollapseToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    email: string;
+    role: string | null;
+  } | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        setIsLoadingUser(true);
+        const user = await authApi.getMe();
+        setUserInfo({
+          name: user.name || 'User',
+          email: user.email || 'Unknown',
+          role: user.role || null,
+        });
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+        // Set fallback info on error - always set something so UI doesn't break
+        setUserInfo({
+          name: 'User',
+          email: 'Unknown',
+          role: null,
+        });
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name || typeof name !== 'string') return 'U';
+    const trimmed = name.trim();
+    if (!trimmed) return 'U';
+    const parts = trimmed.split(' ').filter(p => p.length > 0);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return trimmed.substring(0, 2).toUpperCase();
+  };
 
   const handleSignOut = () => {
     // TODO: Implement sign out logic
@@ -158,23 +202,72 @@ export default function Sidebar({ isOpen, onToggle, isCollapsed, onCollapseToggl
 
           {/* User Profile Section */}
           <div className={`border-t border-gray-200 ${isCollapsed ? 'p-2' : 'p-4'}`}>
-            {!isCollapsed && (
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">JD</span>
+            {isLoadingUser ? (
+              // Loading state
+              !isCollapsed ? (
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />
+                    <div className="h-3 bg-gray-200 rounded w-32 animate-pulse" />
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 text-sm truncate">John Doe</p>
-                  <p className="text-xs text-gray-500 truncate">Senior Auditor</p>
+              ) : (
+                <div className="flex justify-center mb-4">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
                 </div>
-              </div>
-            )}
-            {isCollapsed && (
-              <div className="flex justify-center mb-4">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">JD</span>
+              )
+            ) : userInfo ? (
+              // User info loaded
+              !isCollapsed ? (
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-semibold text-sm">
+                      {getInitials(userInfo.name)}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm truncate" title={userInfo.name}>
+                      {userInfo.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate" title={userInfo.email}>
+                      {userInfo.email}
+                    </p>
+                    {userInfo.role && (
+                      <p className="text-xs text-gray-400 truncate" title={userInfo.role}>
+                        {userInfo.role}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex justify-center mb-4">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center" title={userInfo.name || 'User'}>
+                    <span className="text-white font-semibold text-sm">
+                      {getInitials(userInfo.name)}
+                    </span>
+                  </div>
+                </div>
+              )
+            ) : (
+              // Fallback if userInfo is somehow null after loading
+              !isCollapsed ? (
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-semibold text-sm">U</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm">User</p>
+                    <p className="text-xs text-gray-500">Not available</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-center mb-4">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">U</span>
+                  </div>
+                </div>
+              )
             )}
             <button
               onClick={handleSignOut}

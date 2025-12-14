@@ -1,14 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export",
-  trailingSlash: true,        // 👉 add this
+  // Only use static export for production builds
+  // Remove output: "export" for dev server to work properly
+  // output: "export", // Commented out for dev server
+  trailingSlash: true,
   images: {
     unoptimized: true,
   },
-  // keep this if you added it
-  // eslint: {
-  //   ignoreDuringBuilds: true,
-  // },
 };
 
 export default nextConfig;

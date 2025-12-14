@@ -143,17 +143,18 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="sso-email" className="block text-sm font-medium text-gray-700 mb-2">
                   Company Email
                 </label>
                 <input
                   type="email"
-                  id="email"
+                  id="sso-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="you@company.com"
-                  disabled
+                  required
+                  disabled={isLoading}
                 />
                 <p className="mt-2 text-xs text-gray-500">
                   Enter your company email. We&apos;ll redirect you to your SSO provider.
@@ -165,7 +166,7 @@ export default function LoginPage() {
                 size="lg"
                 className="w-full"
                 onClick={handleSSOLogin}
-                disabled
+                disabled={isLoading || !email}
               >
                 Continue with SSO
               </Button>

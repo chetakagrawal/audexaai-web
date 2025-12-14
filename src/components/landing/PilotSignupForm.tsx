@@ -9,6 +9,7 @@ interface FormData {
   fullName: string;
   companyName: string;
   isIndividual: boolean;
+  requestedAuthMode: 'direct' | 'sso';
 }
 
 interface FormErrors {
@@ -47,6 +48,7 @@ export default function PilotSignupForm() {
     fullName: '',
     companyName: '',
     isIndividual: false,
+    requestedAuthMode: 'direct', // Default to direct, can change to SSO
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -65,7 +67,7 @@ export default function PilotSignupForm() {
   /**
    * Handle input changes
    */
-  const handleChange = useCallback((field: keyof FormData, value: string | boolean) => {
+  const handleChange = useCallback((field: keyof FormData, value: string | boolean | 'direct' | 'sso') => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setSubmitError(null);
 
@@ -135,6 +137,10 @@ export default function PilotSignupForm() {
       const companyDomain = !formData.isIndividual ? extractCompanyDomain(formData.email) : undefined;
 
       // Prepare signup data for backend
+      // Determine auth mode: if user has company (not individual) and company name, suggest SSO
+      // Otherwise default to direct auth
+      const authMode = (!formData.isIndividual && formData.companyName.trim()) ? 'sso' : 'direct';
+
       const signupData: {
         email: string;
         full_name?: string;
@@ -143,10 +149,14 @@ export default function PilotSignupForm() {
         requested_auth_mode?: 'sso' | 'direct';
       } = {
         email: formData.email.trim().toLowerCase(),
-        requested_auth_mode: 'direct', // Default to direct auth for pilot
+        requested_auth_mode: formData.requestedAuthMode || authMode,
       };
 
       // Add optional fields
+      if (formData.fullName.trim()) {
+        signupData.full_name = formData.fullName.trim();
+      }
+
       if (!formData.isIndividual && formData.companyName.trim()) {
         signupData.company_name = formData.companyName.trim();
       }
@@ -196,7 +206,7 @@ export default function PilotSignupForm() {
    */
   const handleReset = useCallback(() => {
     setStep(1);
-    setFormData({ email: '', fullName: '', companyName: '', isIndividual: false });
+    setFormData({ email: '', fullName: '', companyName: '', isIndividual: false, requestedAuthMode: 'direct' });
     setErrors({});
     setTouched({});
     setIsLoading(false);
@@ -407,6 +417,23 @@ export default function PilotSignupForm() {
                     focus:outline-none focus:ring-2 focus:ring-white transition-all"
                   autoComplete="organization"
                 />
+                {/* Auth mode selection for companies */}
+                {formData.companyName.trim() && (
+                  <div className="mt-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.requestedAuthMode === 'sso'}
+                        onChange={(e) => handleChange('requestedAuthMode', e.target.checked ? 'sso' : 'direct')}
+                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                      />
+                      <span>Request SSO authentication for my company</span>
+                    </label>
+                    <p className="text-gray-400 text-xs mt-1 ml-6">
+                      If checked, we&apos;ll set up SSO (Okta, Azure AD, etc.) after approval
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
