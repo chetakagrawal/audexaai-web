@@ -22,12 +22,42 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
-  const handleSSOLogin = () => {
-    // TODO: Implement SSO flow
-    // 1. Detect company from email domain
-    // 2. Redirect to company's SSO provider (SAML/OAuth)
-    // 3. Handle callback and create session
-    alert('SSO login coming soon! This will redirect to your company\'s SSO provider.');
+  const handleSSOLogin = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    setError(null);
+    
+    if (!email) {
+      setError('Please enter your company email address');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // TODO: Implement SSO redirect flow
+      // The actual SSO login flow (redirecting to SSO provider) is a separate phase.
+      // For now, this will be handled by the backend's SSO authentication endpoints
+      // which will be implemented when SSO login flow is completed.
+      
+      // Note: SSO login requires:
+      // 1. Backend endpoint to initiate SSO login (get SSO auth URL)
+      // 2. Redirect user to SSO provider
+      // 3. Handle callback from SSO provider
+      // 4. Create session with JWT token
+      
+      // For now, show message that SSO login is in progress
+      setError('SSO login is being implemented. Please use direct login for now, or contact support if you need SSO access.');
+    } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'SSO login failed. Please try again or use direct login.';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDirectLogin = async (e: React.FormEvent) => {
@@ -130,7 +160,7 @@ export default function LoginPage() {
 
           {/* SSO Login */}
           {loginMethod === 'sso' && (
-            <div className="space-y-4">
+            <form onSubmit={handleSSOLogin} className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-2">
                   <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -141,6 +171,12 @@ export default function LoginPage() {
                   </p>
                 </div>
               </div>
+
+              {error && loginMethod === 'sso' && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="sso-email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -164,19 +200,22 @@ export default function LoginPage() {
               <Button
                 variant="primary"
                 size="lg"
+                type="submit"
                 className="w-full"
-                onClick={handleSSOLogin}
                 disabled={isLoading || !email}
               >
-                Continue with SSO
+                {isLoading ? 'Redirecting...' : 'Continue with SSO'}
               </Button>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-xs text-gray-500 text-center">
                   Supported: Okta, Azure AD, Google Workspace, OneLogin, Auth0, and more
                 </p>
+                <p className="text-xs text-amber-600 text-center mt-2">
+                  Note: SSO login flow is being implemented. If your company has SSO configured, please contact support.
+                </p>
               </div>
-            </div>
+            </form>
           )}
 
           {/* Direct Login */}
