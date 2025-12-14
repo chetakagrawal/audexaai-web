@@ -2,7 +2,7 @@
  * Authentication utilities and helpers.
  */
 
-import { getAuthToken, removeAuthToken } from './api';
+import { getAuthToken, removeAuthToken } from './api/core';
 
 export interface User {
   id: string;
