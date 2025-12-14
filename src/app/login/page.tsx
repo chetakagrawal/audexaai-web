@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import Logo from '@/components/ui/Logo';
-import { authApi } from '@/lib/api';
+import { authApi, setDefaultMembershipId } from '@/lib/api';
 import { extractTenantSlugFromEmail } from '@/lib/auth';
 
 export default function LoginPage() {
@@ -45,11 +45,26 @@ export default function LoginPage() {
         return;
       }
 
-      // Call dev-login endpoint
-      await authApi.devLogin(email, slug);
+      // Call dev-login endpoint - now returns default_membership_id and next_url
+      const loginResponse = await authApi.devLogin(email, slug);
 
-      // Redirect to dashboard
-      router.push('/portal/dashboard/');
+      // If default_membership_id wasn't in login response, fetch memberships
+      // This ensures we have the membership ID for X-Membership-Id header
+      if (!loginResponse.default_membership_id) {
+        try {
+          const membershipsResponse = await authApi.getMemberships();
+          if (membershipsResponse.default_membership_id) {
+            setDefaultMembershipId(membershipsResponse.default_membership_id);
+          }
+        } catch (membershipsErr) {
+          // If fetching memberships fails, continue anyway - user might be platform admin
+          console.warn('Could not fetch memberships:', membershipsErr);
+        }
+      }
+
+      // Navigate to next_url from login response
+      // This will be "/portal/dashboard" if user has memberships, "/no-access" otherwise
+      router.push(loginResponse.next_url);
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 

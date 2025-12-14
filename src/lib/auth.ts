@@ -33,8 +33,9 @@ export function getToken(): string | null {
  */
 export function logout(): void {
   removeAuthToken();
-  // Redirect to login page
+  // Also remove membership ID if it exists
   if (typeof window !== 'undefined') {
+    localStorage.removeItem('default_membership_id');
     window.location.href = '/login/';
   }
 }

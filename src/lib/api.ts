@@ -31,6 +31,31 @@ export function setAuthToken(token: string): void {
 export function removeAuthToken(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('auth_token');
+  localStorage.removeItem('default_membership_id');
+}
+
+/**
+ * Get the stored default membership ID (for X-Membership-Id header).
+ */
+export function getDefaultMembershipId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('default_membership_id');
+}
+
+/**
+ * Store the default membership ID.
+ */
+export function setDefaultMembershipId(membershipId: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('default_membership_id', membershipId);
+}
+
+/**
+ * Remove the default membership ID.
+ */
+export function removeDefaultMembershipId(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('default_membership_id');
 }
 
 /**
@@ -51,7 +76,14 @@ export async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // Merge additional headers from options
+  // Automatically include X-Membership-Id header if available and not already set
+  // This header is required for tenant-scoped endpoints
+  const defaultMembershipId = getDefaultMembershipId();
+  if (defaultMembershipId && !headers['X-Membership-Id']) {
+    headers['X-Membership-Id'] = defaultMembershipId;
+  }
+
+  // Merge additional headers from options (these override defaults)
   if (options.headers) {
     const optHeaders = options.headers as Record<string, string>;
     Object.assign(headers, optHeaders);
@@ -95,6 +127,7 @@ export async function apiRequest<T>(
 export const authApi = {
   /**
    * Dev login - creates/finds tenant and user, returns JWT token
+   * Now includes default_membership_id and next_url for routing
    */
   async devLogin(email: string, tenantSlug: string) {
     const response = await apiRequest<{
@@ -104,6 +137,14 @@ export const authApi = {
       tenant_id: string | null;  // Can be null for platform admins
       role: string;
       is_platform_admin: boolean;
+      default_membership_id: string | null;
+      next_url: string;
+      memberships: Array<{
+        membership_id: string;
+        tenant_id: string;
+        tenant_name: string;
+        role: string;
+      }>;
     }>('/v1/auth/dev-login', {
       method: 'POST',
       body: JSON.stringify({ email, tenant_slug: tenantSlug }),
@@ -111,6 +152,11 @@ export const authApi = {
 
     // Store token
     setAuthToken(response.access_token);
+
+    // Store default membership ID if available (for X-Membership-Id header)
+    if (response.default_membership_id) {
+      setDefaultMembershipId(response.default_membership_id);
+    }
 
     return response;
   },
@@ -130,10 +176,54 @@ export const authApi = {
   },
 
   /**
-   * Logout - removes token
+   * Get all memberships for the current user
+   * Returns all user memberships with tenant details and default_membership_id
+   */
+  async getMemberships() {
+    return apiRequest<{
+      default_membership_id: string | null;
+      memberships: Array<{
+        membership_id: string;
+        tenant_id: string;
+        tenant_name: string;
+        tenant_slug: string;
+        role: string;
+        is_default: boolean;
+      }>;
+    }>('/v1/me/memberships');
+  },
+
+  /**
+   * Logout - removes token and membership ID
    */
   logout() {
     removeAuthToken();
+    removeDefaultMembershipId();
+  },
+};
+
+/**
+ * Signup API endpoints
+ */
+export const signupApi = {
+  /**
+   * Create a new signup request
+   */
+  async createSignup(data: {
+    email: string;
+    full_name?: string;
+    company_name?: string;
+    company_domain?: string;
+    requested_auth_mode?: 'sso' | 'direct';
+    metadata?: Record<string, unknown>;
+  }) {
+    return apiRequest<{
+      id: string;
+      status: string;
+    }>('/v1/signups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 };
 
