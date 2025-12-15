@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:export": "NEXT_EXPORT=true next build",
     "start": "next start",
+    "serve:export": "npx serve@latest out -p 3000",
+    "test:export": "pnpm build:export && pnpm serve:export",
     "lint": "next lint"
   },
   "dependencies": {
