@@ -6,7 +6,6 @@ import { ProjectControl, Control } from '../types';
 
 interface ProjectControlsTabProps {
   projectControls: ProjectControl[];
-  availableControls: Control[];
   controlsNotInProject: Control[];
   isLoadingControls: boolean;
   onAddControl: () => void;
@@ -16,7 +15,6 @@ interface ProjectControlsTabProps {
 
 export default function ProjectControlsTab({
   projectControls,
-  availableControls,
   controlsNotInProject,
   isLoadingControls,
   onAddControl,
