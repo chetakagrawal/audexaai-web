@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
 import { ApiProject, ProjectControl, Control, Tab } from '../types';
 import ProjectOverviewTab from './ProjectOverviewTab';
 import ProjectControlsTab from './ProjectControlsTab';
@@ -117,7 +116,6 @@ export default function ProjectDetailView({
           {activeTab === 'controls' && (
             <ProjectControlsTab
               projectControls={projectControls}
-              availableControls={availableControls}
               controlsNotInProject={controlsNotInProject}
               isLoadingControls={isLoadingControls}
               onAddControl={() => setShowAddControlModal(true)}

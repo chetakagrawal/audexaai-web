@@ -294,7 +294,7 @@ export default function ApplicationsPage() {
                 {applications.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                      No applications found. Click "+ Add Application" to create one.
+                      No applications found. Click &quot;+ Add Application&quot; to create one.
                     </td>
                   </tr>
                 ) : (
