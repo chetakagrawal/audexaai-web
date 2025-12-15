@@ -4,15 +4,15 @@ import React, { useState, useEffect } from 'react';
 import MetricCard from '@/components/portal/MetricCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import { applicationsApi, authApi } from '@/lib/api';
+import { applicationsApi, authApi, getDefaultMembershipId } from '@/lib/api';
 
 interface Application {
   id: string;
   name: string;
   category: string | null;
   scope_rationale: string | null;
-  business_owner_membership_id: string;
-  it_owner_membership_id: string;
+  business_owner_membership_id: string | null;
+  it_owner_membership_id: string | null;
   created_at: string;
 }
 
@@ -49,10 +49,25 @@ export default function ApplicationsPage() {
     async function fetchData() {
       try {
         setLoading(true);
+        setError(null);
+        
+        // Check if we have a default membership ID (required for tenant-scoped endpoints)
+        const membershipId = getDefaultMembershipId();
+        console.log('[Applications] Default membership ID:', membershipId);
+        
+        if (!membershipId) {
+          setError('No membership ID found. Please log in again.');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('[Applications] Fetching applications and memberships...');
+        // Fetch both in parallel
         const [appsData, membershipsData] = await Promise.all([
           applicationsApi.listApplications(),
           authApi.getTenantMemberships(),
         ]);
+        console.log('[Applications] Fetched successfully:', { appsCount: appsData.length, membershipsCount: membershipsData.length });
         setApplications(appsData);
         setMemberships(membershipsData);
         
@@ -66,8 +81,13 @@ export default function ApplicationsPage() {
           }));
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load applications');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load applications';
+        setError(errorMessage);
         console.error('Error fetching applications:', err);
+        console.error('Error details:', {
+          message: errorMessage,
+          stack: err instanceof Error ? err.stack : undefined,
+        });
       } finally {
         setLoading(false);
       }
@@ -81,13 +101,13 @@ export default function ApplicationsPage() {
     setError(null);
 
     try {
-      const newApplication = await applicationsApi.createApplication({
-        name: formData.name,
-        category: formData.category || null,
-        scope_rationale: formData.scope_rationale || null,
-        business_owner_membership_id: formData.business_owner_membership_id,
-        it_owner_membership_id: formData.it_owner_membership_id,
-      });
+      const newApplication =         await applicationsApi.createApplication({
+          name: formData.name,
+          category: formData.category || null,
+          scope_rationale: formData.scope_rationale || null,
+          business_owner_membership_id: formData.business_owner_membership_id || null,
+          it_owner_membership_id: formData.it_owner_membership_id || null,
+        });
 
       // Add the new application to the list
       setApplications([...applications, newApplication]);
@@ -97,8 +117,8 @@ export default function ApplicationsPage() {
         name: '',
         category: '',
         scope_rationale: '',
-        business_owner_membership_id: memberships.find(m => m.is_default)?.id || memberships[0]?.id || '',
-        it_owner_membership_id: memberships.find(m => m.is_default)?.id || memberships[0]?.id || '',
+        business_owner_membership_id: '',
+        it_owner_membership_id: '',
       });
       setShowAddModal(false);
     } catch (err) {
@@ -296,20 +316,32 @@ export default function ApplicationsPage() {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          {memberships.find(m => m.id === app.business_owner_membership_id)?.user_name || 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {memberships.find(m => m.id === app.business_owner_membership_id)?.role || ''}
-                        </div>
+                        {app.business_owner_membership_id ? (
+                          <>
+                            <div className="text-sm text-gray-900">
+                              {memberships.find(m => m.id === app.business_owner_membership_id)?.user_name || 'N/A'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {memberships.find(m => m.id === app.business_owner_membership_id)?.role || ''}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm text-gray-400">Not assigned</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          {memberships.find(m => m.id === app.it_owner_membership_id)?.user_name || 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {memberships.find(m => m.id === app.it_owner_membership_id)?.role || ''}
-                        </div>
+                        {app.it_owner_membership_id ? (
+                          <>
+                            <div className="text-sm text-gray-900">
+                              {memberships.find(m => m.id === app.it_owner_membership_id)?.user_name || 'N/A'}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {memberships.find(m => m.id === app.it_owner_membership_id)?.role || ''}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-sm text-gray-400">Not assigned</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <p className="text-sm text-gray-600 max-w-md">{app.scope_rationale || '—'}</p>
@@ -377,14 +409,14 @@ export default function ApplicationsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Business Process Owner *
+                    Business Process Owner
                   </label>
                   <select
-                    required
                     value={formData.business_owner_membership_id}
                     onChange={(e) => setFormData({ ...formData, business_owner_membership_id: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
+                    <option value="">Select a business process owner (optional)</option>
                     {memberships.length === 0 ? (
                       <option value="">No memberships available</option>
                     ) : (
@@ -399,14 +431,14 @@ export default function ApplicationsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    IT Owner *
+                    IT Owner
                   </label>
                   <select
-                    required
                     value={formData.it_owner_membership_id}
                     onChange={(e) => setFormData({ ...formData, it_owner_membership_id: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
+                    <option value="">Select an IT owner (optional)</option>
                     {memberships.length === 0 ? (
                       <option value="">No memberships available</option>
                     ) : (
