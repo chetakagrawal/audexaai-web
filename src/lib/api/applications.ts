@@ -15,8 +15,8 @@ export const applicationsApi = {
       name: string;
       category: string | null;
       scope_rationale: string | null;
-      business_owner_membership_id: string;
-      it_owner_membership_id: string;
+      business_owner_membership_id: string | null;
+      it_owner_membership_id: string | null;
       created_at: string;
     }>>('/v1/applications');
   },
@@ -31,8 +31,8 @@ export const applicationsApi = {
       name: string;
       category: string | null;
       scope_rationale: string | null;
-      business_owner_membership_id: string;
-      it_owner_membership_id: string;
+      business_owner_membership_id: string | null;
+      it_owner_membership_id: string | null;
       created_at: string;
     }>(`/v1/applications/${applicationId}`);
   },
@@ -44,8 +44,8 @@ export const applicationsApi = {
     name: string;
     category?: string | null;
     scope_rationale?: string | null;
-    business_owner_membership_id: string;
-    it_owner_membership_id: string;
+    business_owner_membership_id?: string | null;
+    it_owner_membership_id?: string | null;
   }) {
     return apiRequest<{
       id: string;
@@ -53,8 +53,8 @@ export const applicationsApi = {
       name: string;
       category: string | null;
       scope_rationale: string | null;
-      business_owner_membership_id: string;
-      it_owner_membership_id: string;
+      business_owner_membership_id: string | null;
+      it_owner_membership_id: string | null;
       created_at: string;
     }>('/v1/applications', {
       method: 'POST',
