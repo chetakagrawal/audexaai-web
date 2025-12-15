@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/portal/DashboardLayout';
 import MetricCard from '@/components/portal/MetricCard';
 import ProjectCard from '@/components/portal/ProjectCard';
 import Button from '@/components/ui/Button';
@@ -308,24 +307,20 @@ export default function ProjectsPage() {
   if (isDetailView) {
     if (isLoadingProject) {
       return (
-        <DashboardLayout>
-          <div className="text-center py-12">
-            <div className="text-gray-500">Loading project...</div>
-          </div>
-        </DashboardLayout>
+        <div className="text-center py-12">
+          <div className="text-gray-500">Loading project...</div>
+        </div>
       );
     }
 
     if (!isValidProjectId || !project) {
       return (
-        <DashboardLayout>
-          <div className="text-center py-12">
-            <div className="text-gray-500 mb-4">Project not found</div>
-            <Button variant="secondary" onClick={() => router.push('/portal/projects')} className="mt-4">
-              Back to Projects
-            </Button>
-          </div>
-        </DashboardLayout>
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-4">Project not found</div>
+          <Button variant="secondary" onClick={() => router.push('/portal/projects')} className="mt-4">
+            Back to Projects
+          </Button>
+        </div>
       );
     }
 
@@ -334,7 +329,7 @@ export default function ProjectsPage() {
     );
 
     return (
-      <DashboardLayout>
+      <>
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -531,8 +526,8 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-        {/* Add Control Modal */}
-        {showAddControlModal && (
+      {/* Add Control Modal */}
+      {showAddControlModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Add Control to Project</h2>
@@ -590,13 +585,13 @@ export default function ProjectsPage() {
             </div>
           </div>
         )}
-      </DashboardLayout>
+      </>
     );
   }
 
   // Render list view
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -793,6 +788,6 @@ export default function ProjectsPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 }

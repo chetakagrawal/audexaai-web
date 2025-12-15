@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/portal/DashboardLayout';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -163,8 +162,7 @@ export default function AuditMappingPage() {
   const passRate = Math.round((passCount / mappings.length) * 100);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Final Audit Mapping Table</h1>
@@ -413,7 +411,6 @@ export default function AuditMappingPage() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
   );
 }
 

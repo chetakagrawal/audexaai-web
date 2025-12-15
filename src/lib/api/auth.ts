@@ -80,6 +80,23 @@ export const authApi = {
   },
 
   /**
+   * Get all memberships in the current tenant (for dropdown selection)
+   * Returns memberships with user information
+   */
+  async getTenantMemberships() {
+    return apiRequest<Array<{
+      id: string;
+      user_id: string;
+      tenant_id: string;
+      role: string;
+      is_default: boolean;
+      user_name: string;
+      user_email: string;
+      created_at: string;
+    }>>('/v1/memberships');
+  },
+
+  /**
    * Logout - removes token and membership ID
    */
   logout() {
