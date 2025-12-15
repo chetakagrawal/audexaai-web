@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 interface Project {
   id: number | string;
@@ -24,10 +24,14 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  const router = useRouter();
+  const pathname = usePathname();
   
   const handleClick = () => {
-    router.push(`/portal/projects/${project.id}`);
+    const newPath = `/portal/projects/${project.id}`;
+    // Use pushState to update URL without triggering Next.js route lookup
+    window.history.pushState({}, '', newPath);
+    // Dispatch custom event to notify components of the pathname change
+    window.dispatchEvent(new Event('pushstate'));
   };
   const statusColors = {
     blue: 'bg-blue-100 text-blue-800',
