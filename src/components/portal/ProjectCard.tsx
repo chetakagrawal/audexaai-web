@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
 
 interface Project {
   id: number | string;
@@ -24,8 +23,6 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
-  const pathname = usePathname();
-  
   const handleClick = () => {
     const newPath = `/portal/projects/${project.id}`;
     // Use pushState to update URL without triggering Next.js route lookup
