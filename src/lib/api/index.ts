@@ -31,3 +31,4 @@ export { signupApi } from './signup';
 export { setupApi, getSetupToken, setSetupToken, removeSetupToken } from './setup';
 export { projectsApi } from './projects';
 export { controlsApi } from './controls';
+export { applicationsApi } from './applications';

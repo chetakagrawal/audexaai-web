@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/portal/DashboardLayout';
 import MetricCard from '@/components/portal/MetricCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -193,7 +192,7 @@ export default function RACMPage() {
   };
 
   return (
-    <DashboardLayout>
+    <React.Fragment>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -581,7 +580,7 @@ export default function RACMPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    </React.Fragment>
   );
 }
 

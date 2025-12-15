@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/portal/DashboardLayout';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -82,8 +81,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
@@ -223,7 +221,6 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }
 

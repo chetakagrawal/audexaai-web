@@ -1,151 +1,133 @@
-import React from 'react';
-import DashboardLayout from '@/components/portal/DashboardLayout';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import MetricCard from '@/components/portal/MetricCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { applicationsApi, authApi } from '@/lib/api';
 
 interface Application {
-  id: number;
+  id: string;
   name: string;
-  category: string;
-  categoryColor: string;
-  businessProcessOwner: {
-    name: string;
-    title: string;
-  };
-  itOwner: {
-    name: string;
-    title: string;
-  };
-  controls: number;
-  keyControls: number;
-  scopeRationale: string;
+  category: string | null;
+  scope_rationale: string | null;
+  business_owner_membership_id: string;
+  it_owner_membership_id: string;
+  created_at: string;
+}
+
+interface Membership {
+  id: string;
+  user_id: string;
+  tenant_id: string;
+  role: string;
+  is_default: boolean;
+  user_name: string;
+  user_email: string;
+  created_at: string;
 }
 
 export default function ApplicationsPage() {
-  const applications: Application[] = [
-    {
-      id: 1,
-      name: 'SAP ERP',
-      category: 'Core Financial System',
-      categoryColor: 'blue',
-      businessProcessOwner: { name: 'Michael Torres', title: 'Finance Director' },
-      itOwner: { name: 'Sarah Chen', title: 'IT Security Manager' },
-      controls: 12,
-      keyControls: 11,
-      scopeRationale: 'Primary system for financial transaction processing, general ledger, accounts payable/receivable, and financial reporting',
-    },
-    {
-      id: 2,
-      name: 'Oracle Financials',
-      category: 'Core Financial System',
-      categoryColor: 'blue',
-      businessProcessOwner: { name: 'Rachel Kim', title: 'Controller' },
-      itOwner: { name: 'Sarah Chen', title: 'IT Security Manager' },
-      controls: 12,
-      keyControls: 11,
-      scopeRationale: 'Secondary financial system used for subsidiary operations and consolidation of financial statements',
-    },
-    {
-      id: 3,
-      name: 'Workday',
-      category: 'Financial-Significant System',
-      categoryColor: 'blue',
-      businessProcessOwner: { name: 'Lisa Anderson', title: 'Chief HR Officer' },
-      itOwner: { name: 'Jennifer Liu', title: 'IT Operations Manager' },
-      controls: 5,
-      keyControls: 4,
-      scopeRationale: 'Human capital management system that processes payroll and employee compensation impacting financial statements',
-    },
-    {
-      id: 4,
-      name: 'Salesforce',
-      category: 'Financial-Significant System',
-      categoryColor: 'blue',
-      businessProcessOwner: { name: 'Mark Stevens', title: 'VP of Sales' },
-      itOwner: { name: 'Alex Rodriguez', title: 'Development Manager' },
-      controls: 1,
-      keyControls: 1,
-      scopeRationale: 'Customer relationship management system that feeds revenue recognition and accounts receivable processes',
-    },
-    {
-      id: 5,
-      name: 'SQL Server',
-      category: 'Infrastructure',
-      categoryColor: 'green',
-      businessProcessOwner: { name: 'Michael Torres', title: 'Finance Director' },
-      itOwner: { name: 'David Park', title: 'Database Administrator' },
-      controls: 3,
-      keyControls: 3,
-      scopeRationale: 'Database platform hosting critical financial data for custom applications and data warehousing',
-    },
-    {
-      id: 6,
-      name: 'PostgreSQL',
-      category: 'Infrastructure',
-      categoryColor: 'green',
-      businessProcessOwner: { name: 'Michael Torres', title: 'Finance Director' },
-      itOwner: { name: 'David Park', title: 'Database Administrator' },
-      controls: 1,
-      keyControls: 1,
-      scopeRationale: 'Database platform supporting financial applications with sensitive financial and customer data',
-    },
-    {
-      id: 7,
-      name: 'Data Warehouse',
-      category: 'Reporting System',
-      categoryColor: 'blue',
-      businessProcessOwner: { name: 'Rachel Kim', title: 'Controller' },
-      itOwner: { name: 'David Park', title: 'Database Administrator' },
-      controls: 1,
-      keyControls: 1,
-      scopeRationale: 'Centralized repository for financial data used in regulatory reporting and management decision-making',
-    },
-    {
-      id: 8,
-      name: 'Custom Financial Apps',
-      category: 'Custom Development',
-      categoryColor: 'blue',
-      businessProcessOwner: { name: 'Michael Torres', title: 'Finance Director' },
-      itOwner: { name: 'Alex Rodriguez', title: 'Development Manager' },
-      controls: 5,
-      keyControls: 3,
-      scopeRationale: 'Internally developed applications that automate financial calculations, reconciliations, and reporting processes',
-    },
-    {
-      id: 9,
-      name: 'Integration Middleware',
-      category: 'Integration',
-      categoryColor: 'blue',
-      businessProcessOwner: { name: 'Michael Torres', title: 'Finance Director' },
-      itOwner: { name: 'Alex Rodriguez', title: 'Development Manager' },
-      controls: 3,
-      keyControls: 1,
-      scopeRationale: 'Integration layer that transfers financial data between systems, ensuring data integrity and completeness',
-    },
-    {
-      id: 10,
-      name: 'Active Directory',
-      category: 'Infrastructure',
-      categoryColor: 'green',
-      businessProcessOwner: { name: 'Lisa Anderson', title: 'Chief HR Officer' },
-      itOwner: { name: 'Sarah Chen', title: 'IT Security Manager' },
-      controls: 1,
-      keyControls: 1,
-      scopeRationale: 'Central authentication and authorization system controlling access to all financial systems',
-    },
-  ];
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    scope_rationale: '',
+    business_owner_membership_id: '',
+    it_owner_membership_id: '',
+  });
 
-  const getCategoryBadgeColor = (category: string) => {
+  // Fetch applications and memberships
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [appsData, membershipsData] = await Promise.all([
+          applicationsApi.listApplications(),
+          authApi.getTenantMemberships(),
+        ]);
+        setApplications(appsData);
+        setMemberships(membershipsData);
+        
+        // Set default membership IDs if available
+        if (membershipsData.length > 0) {
+          const defaultMembership = membershipsData.find(m => m.is_default) || membershipsData[0];
+          setFormData(prev => ({
+            ...prev,
+            business_owner_membership_id: defaultMembership.id,
+            it_owner_membership_id: defaultMembership.id,
+          }));
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load applications');
+        console.error('Error fetching applications:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const newApplication = await applicationsApi.createApplication({
+        name: formData.name,
+        category: formData.category || null,
+        scope_rationale: formData.scope_rationale || null,
+        business_owner_membership_id: formData.business_owner_membership_id,
+        it_owner_membership_id: formData.it_owner_membership_id,
+      });
+
+      // Add the new application to the list
+      setApplications([...applications, newApplication]);
+      
+      // Reset form and close modal
+      setFormData({
+        name: '',
+        category: '',
+        scope_rationale: '',
+        business_owner_membership_id: memberships.find(m => m.is_default)?.id || memberships[0]?.id || '',
+        it_owner_membership_id: memberships.find(m => m.is_default)?.id || memberships[0]?.id || '',
+      });
+      setShowAddModal(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create application');
+      console.error('Error creating application:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getCategoryBadgeColor = (category: string | null) => {
+    if (!category) return 'info';
     if (category === 'Core Financial System') return 'info';
     if (category === 'Infrastructure') return 'success';
     if (category === 'Development Environments') return 'warning';
     return 'info';
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600">Loading applications...</div>
+      </div>
+    );
+  }
+
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <>
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -156,11 +138,27 @@ export default function ApplicationsPage() {
             <Button variant="outline" size="sm">
               Export Applications
             </Button>
-            <Button variant="primary" size="sm">
+            <Button 
+              variant="primary" 
+              size="sm"
+              onClick={() => setShowAddModal(true)}
+            >
               + Add Application
             </Button>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
 
         {/* Information Box */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -187,7 +185,7 @@ export default function ApplicationsPage() {
                 </svg>
               </div>
             }
-            value="15"
+            value={applications.length.toString()}
             label="Total Applications"
           />
           <MetricCard
@@ -198,7 +196,7 @@ export default function ApplicationsPage() {
                 </svg>
               </div>
             }
-            value="2"
+            value={applications.filter(app => app.category === 'Core Financial System').length.toString()}
             label="Core Financial Systems"
           />
           <MetricCard
@@ -209,7 +207,7 @@ export default function ApplicationsPage() {
                 </svg>
               </div>
             }
-            value="6"
+            value={applications.filter(app => app.category === 'Infrastructure').length.toString()}
             label="Infrastructure"
           />
           <MetricCard
@@ -220,7 +218,7 @@ export default function ApplicationsPage() {
                 </svg>
               </div>
             }
-            value="2"
+            value={applications.filter(app => app.category === 'Development Environments').length.toString()}
             label="Development Environments"
           />
         </div>
@@ -268,61 +266,200 @@ export default function ApplicationsPage() {
                     IT Owner
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Controls
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Key Controls
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Scope Rationale
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {applications.map((app) => (
-                  <tr key={app.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span className="font-medium text-gray-900">{app.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant={getCategoryBadgeColor(app.category) as 'info' | 'success' | 'warning'}>
-                        {app.category}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{app.businessProcessOwner.name}</div>
-                      <div className="text-xs text-gray-500">{app.businessProcessOwner.title}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{app.itOwner.name}</div>
-                      <div className="text-xs text-gray-500">{app.itOwner.title}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">{app.controls} controls</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-semibold text-purple-700">{app.keyControls}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600 max-w-md">{app.scopeRationale}</p>
+                {applications.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                      No applications found. Click "+ Add Application" to create one.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  applications.map((app) => (
+                    <tr key={app.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                          <span className="font-medium text-gray-900">{app.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {app.category && (
+                          <Badge variant={getCategoryBadgeColor(app.category) as 'info' | 'success' | 'warning'}>
+                            {app.category}
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {memberships.find(m => m.id === app.business_owner_membership_id)?.user_name || 'N/A'}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {memberships.find(m => m.id === app.business_owner_membership_id)?.role || ''}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {memberships.find(m => m.id === app.it_owner_membership_id)?.user_name || 'N/A'}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {memberships.find(m => m.id === app.it_owner_membership_id)?.role || ''}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-gray-600 max-w-md">{app.scope_rationale || '—'}</p>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-    </DashboardLayout>
+
+      {/* Add Application Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">Add New Application</h2>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Application Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="e.g., SAP ERP"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="">Select a category</option>
+                    <option value="Core Financial System">Core Financial System</option>
+                    <option value="Financial-Significant System">Financial-Significant System</option>
+                    <option value="Infrastructure">Infrastructure</option>
+                    <option value="Reporting System">Reporting System</option>
+                    <option value="Custom Development">Custom Development</option>
+                    <option value="Integration">Integration</option>
+                    <option value="Development Environments">Development Environments</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Process Owner *
+                  </label>
+                  <select
+                    required
+                    value={formData.business_owner_membership_id}
+                    onChange={(e) => setFormData({ ...formData, business_owner_membership_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    {memberships.length === 0 ? (
+                      <option value="">No memberships available</option>
+                    ) : (
+                      memberships.map((membership) => (
+                        <option key={membership.id} value={membership.id}>
+                          {membership.user_name} ({membership.user_email}) - {membership.role} {membership.is_default && '(Default)'}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    IT Owner *
+                  </label>
+                  <select
+                    required
+                    value={formData.it_owner_membership_id}
+                    onChange={(e) => setFormData({ ...formData, it_owner_membership_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    {memberships.length === 0 ? (
+                      <option value="">No memberships available</option>
+                    ) : (
+                      memberships.map((membership) => (
+                        <option key={membership.id} value={membership.id}>
+                          {membership.user_name} ({membership.user_email}) - {membership.role} {membership.is_default && '(Default)'}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Scope Rationale
+                  </label>
+                  <textarea
+                    value={formData.scope_rationale}
+                    onChange={(e) => setFormData({ ...formData, scope_rationale: e.target.value })}
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="Explain why this application is included in SOX compliance..."
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAddModal(false)}
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Creating...' : 'Create Application'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
-
