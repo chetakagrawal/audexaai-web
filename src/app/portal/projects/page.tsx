@@ -181,6 +181,57 @@ export default function ProjectsPage() {
     }
   }, [projectId]);
 
+  const handleApplyRACM = async () => {
+    if (!projectId) return;
+
+    try {
+      // Get all controls (which include their applications)
+      const allControls = await controlsApi.listControls();
+      
+      // Get controls already in the project
+      const existingProjectControls = await projectsApi.listProjectControls(projectId);
+      const existingControlIds = new Set(existingProjectControls.map(pc => pc.control_id));
+      
+      // Filter out controls that are already in the project
+      const controlsToAdd = allControls
+        .filter(control => !existingControlIds.has(control.id))
+        .map(control => control.id);
+      
+      if (controlsToAdd.length === 0) {
+        alert('All controls from RACM are already added to this project.');
+        return;
+      }
+      
+      // Add all controls to the project in bulk
+      await projectsApi.addControlsToProjectBulk(projectId, controlsToAdd);
+      
+      // Refresh the project controls list
+      await fetchProjectControls(projectId);
+      await fetchAvailableControls();
+      
+      alert(`Successfully added ${controlsToAdd.length} control(s) from RACM to this project.`);
+    } catch (error) {
+      console.error('Failed to apply RACM:', error);
+      alert('Failed to apply RACM. Please try again.');
+    }
+  };
+
+  const handleDeleteControl = async (projectControlId: string) => {
+    if (!projectId) return;
+
+    try {
+      await projectsApi.deleteProjectControl(projectId, projectControlId);
+      
+      // Refresh the project controls list
+      await fetchProjectControls(projectId);
+      await fetchAvailableControls();
+    } catch (error) {
+      console.error('Failed to delete control:', error);
+      alert('Failed to delete control. Please try again.');
+      throw error;
+    }
+  };
+
   const handleUpdateProject = async (data: {
     name: string;
     status: string;
@@ -237,6 +288,8 @@ export default function ProjectsPage() {
         onRefreshControls={() => projectId ? fetchProjectControls(projectId) : Promise.resolve()}
         onLoadControls={handleLoadControls}
         onUpdateProject={handleUpdateProject}
+        onApplyRACM={handleApplyRACM}
+        onDeleteControl={handleDeleteControl}
       />
     );
   }
