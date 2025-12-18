@@ -6,6 +6,7 @@ import { ApiProject, ProjectControl, Control, Tab } from '../types';
 import ProjectOverviewTab from './ProjectOverviewTab';
 import ProjectControlsTab from './ProjectControlsTab';
 import AddControlModal from './AddControlModal';
+import EditProjectModal from './EditProjectModal';
 
 interface ProjectDetailViewProps {
   project: ApiProject;
@@ -15,6 +16,12 @@ interface ProjectDetailViewProps {
   onAddControl: (controlId: string) => Promise<void>;
   onRefreshControls: () => Promise<void>;
   onLoadControls: () => Promise<void>;
+  onUpdateProject: (data: {
+    name: string;
+    status: string;
+    period_start: string | null;
+    period_end: string | null;
+  }) => Promise<void>;
 }
 
 export default function ProjectDetailView({
@@ -25,11 +32,14 @@ export default function ProjectDetailView({
   onAddControl,
   onRefreshControls,
   onLoadControls,
+  onUpdateProject,
 }: ProjectDetailViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [showAddControlModal, setShowAddControlModal] = useState(false);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [selectedControlId, setSelectedControlId] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
   const controlsLoadedRef = useRef(false);
 
   // Load controls when controls tab is activated (only once per tab activation)
@@ -59,6 +69,24 @@ export default function ProjectDetailView({
     await onRefreshControls();
   };
 
+  const handleUpdateProject = async (data: {
+    name: string;
+    status: string;
+    period_start: string | null;
+    period_end: string | null;
+  }) => {
+    setIsSaving(true);
+    try {
+      await onUpdateProject(data);
+      setShowEditProjectModal(false);
+    } catch (error) {
+      console.error('Failed to update project:', error);
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <>
       <div className="space-y-6">
@@ -77,6 +105,12 @@ export default function ProjectDetailView({
             <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
             <p className="text-gray-600 mt-1">Project details and configuration</p>
           </div>
+          <button
+            onClick={() => setShowEditProjectModal(true)}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Edit Project
+          </button>
         </div>
 
         {/* Tabs */}
@@ -138,6 +172,15 @@ export default function ProjectDetailView({
         selectedControlId={selectedControlId}
         onSelectControl={setSelectedControlId}
         isSubmitting={false}
+      />
+
+      {/* Edit Project Modal */}
+      <EditProjectModal
+        project={project}
+        isOpen={showEditProjectModal}
+        onClose={() => setShowEditProjectModal(false)}
+        onSave={handleUpdateProject}
+        isSaving={isSaving}
       />
     </>
   );

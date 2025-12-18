@@ -103,4 +103,32 @@ export const projectsApi = {
       body: JSON.stringify(data),
     });
   },
+
+  /**
+   * Update an existing project
+   */
+  async updateProject(
+    projectId: string,
+    data: {
+      name?: string | null;
+      status?: string | null;
+      period_start?: string | null;
+      period_end?: string | null;
+    }
+  ) {
+    return apiRequest<{
+      id: string;
+      tenant_id: string;
+      created_by_membership_id: string;
+      name: string;
+      status: string;
+      period_start: string | null;
+      period_end: string | null;
+      created_at: string;
+      updated_at: string;
+    }>(`/v1/projects/${projectId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
 };
