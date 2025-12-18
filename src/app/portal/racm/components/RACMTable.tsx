@@ -52,14 +52,25 @@ export default function RACMTable({ controls }: RACMTableProps) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {controls.map((control) => (
-              <tr key={control.id} className="hover:bg-gray-50 transition-colors">
+            {controls.map((control) => {
+              const handleClick = () => {
+                const newPath = `/portal/racm/${control.id}`;
+                window.history.pushState({}, '', newPath);
+                window.dispatchEvent(new Event('pushstate'));
+              };
+              
+              return (
+              <tr 
+                key={control.id} 
+                onClick={handleClick}
+                className="hover:bg-gray-50 transition-colors cursor-pointer"
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="font-medium text-gray-900">{control.id}</span>
+                    <span className="font-medium text-gray-900">{control.controlCode}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -112,7 +123,8 @@ export default function RACMTable({ controls }: RACMTableProps) {
                   <div className={`w-3 h-3 rounded-full ${control.isAutomated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

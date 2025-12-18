@@ -1,5 +1,6 @@
 export interface Control {
-  id: string;
+  id: string; // UUID from backend
+  controlCode: string; // Display code like "AC-001"
   name: string;
   category: string;
   applicationsInScope: string[];

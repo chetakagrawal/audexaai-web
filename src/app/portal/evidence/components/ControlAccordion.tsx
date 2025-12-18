@@ -53,18 +53,22 @@ export default function ControlAccordion({ control }: ControlAccordionProps) {
                   <p className="text-sm text-gray-900">{control.description}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-xs text-gray-500 block mb-1">Risk Rating</span>
+                <div>
+                  <span className="text-xs text-gray-500 block mb-1">Risk Rating</span>
+                  {control.riskRating ? (
                     <Badge variant={
                       control.riskRating === 'High' ? 'danger' :
                       control.riskRating === 'Medium' ? 'warning' : 'success'
                     }>
                       {control.riskRating}
                     </Badge>
-                  </div>
+                  ) : (
+                    <span className="text-sm text-gray-500">Not set</span>
+                  )}
+                </div>
                   <div>
                     <span className="text-xs text-gray-500 block mb-1">Control Type</span>
-                    <p className="text-sm text-gray-900">{control.controlType}</p>
+                    <p className="text-sm text-gray-900">{control.controlType || 'Not set'}</p>
                   </div>
                 </div>
               </div>
@@ -75,7 +79,7 @@ export default function ControlAccordion({ control }: ControlAccordionProps) {
               <div className="space-y-3">
                 <div>
                   <span className="text-xs text-gray-500 block mb-1">Frequency</span>
-                  <p className="text-sm text-gray-900">{control.frequency}</p>
+                  <p className="text-sm text-gray-900">{control.frequency || 'Not set'}</p>
                 </div>
                 <div className="flex gap-4">
                   <div className="flex items-center gap-2">
