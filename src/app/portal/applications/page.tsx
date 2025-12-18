@@ -5,6 +5,8 @@ import MetricCard from '@/components/portal/MetricCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { applicationsApi, authApi, getDefaultMembershipId } from '@/lib/api';
+import ApplicationRow from './components/ApplicationRow';
+import EditApplicationDrawer from './components/EditApplicationDrawer';
 
 interface Application {
   id: string;
@@ -34,6 +36,8 @@ export default function ApplicationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingApplication, setEditingApplication] = useState<Application | null>(null);
+  const [showEditDrawer, setShowEditDrawer] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -101,13 +105,13 @@ export default function ApplicationsPage() {
     setError(null);
 
     try {
-      const newApplication =         await applicationsApi.createApplication({
-          name: formData.name,
-          category: formData.category || null,
-          scope_rationale: formData.scope_rationale || null,
-          business_owner_membership_id: formData.business_owner_membership_id || null,
-          it_owner_membership_id: formData.it_owner_membership_id || null,
-        });
+      const newApplication = await applicationsApi.createApplication({
+        name: formData.name,
+        category: formData.category || null,
+        scope_rationale: formData.scope_rationale || null,
+        business_owner_membership_id: formData.business_owner_membership_id || null,
+        it_owner_membership_id: formData.it_owner_membership_id || null,
+      });
 
       // Add the new application to the list
       setApplications([...applications, newApplication]);
@@ -126,6 +130,37 @@ export default function ApplicationsPage() {
       console.error('Error creating application:', err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleEditApplication = (application: Application) => {
+    setEditingApplication(application);
+    setShowEditDrawer(true);
+  };
+
+  const handleSaveApplication = async (
+    applicationId: string,
+    data: {
+      name?: string | null;
+      category?: string | null;
+      scope_rationale?: string | null;
+      business_owner_membership_id?: string | null;
+      it_owner_membership_id?: string | null;
+    }
+  ) => {
+    try {
+      const updatedApplication = await applicationsApi.updateApplication(applicationId, data);
+      
+      // Update the application in the list
+      setApplications(applications.map(app => 
+        app.id === applicationId ? updatedApplication : app
+      ));
+      
+      setShowEditDrawer(false);
+      setEditingApplication(null);
+    } catch (err) {
+      console.error('Error updating application:', err);
+      throw err;
     }
   };
 
@@ -288,65 +323,26 @@ export default function ApplicationsPage() {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Scope Rationale
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {applications.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       No applications found. Click &quot;+ Add Application&quot; to create one.
                     </td>
                   </tr>
                 ) : (
                   applications.map((app) => (
-                    <tr key={app.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                          <span className="font-medium text-gray-900">{app.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {app.category && (
-                          <Badge variant={getCategoryBadgeColor(app.category) as 'info' | 'success' | 'warning'}>
-                            {app.category}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {app.business_owner_membership_id ? (
-                          <>
-                            <div className="text-sm text-gray-900">
-                              {memberships.find(m => m.id === app.business_owner_membership_id)?.user_name || 'N/A'}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {memberships.find(m => m.id === app.business_owner_membership_id)?.role || ''}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-sm text-gray-400">Not assigned</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {app.it_owner_membership_id ? (
-                          <>
-                            <div className="text-sm text-gray-900">
-                              {memberships.find(m => m.id === app.it_owner_membership_id)?.user_name || 'N/A'}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {memberships.find(m => m.id === app.it_owner_membership_id)?.role || ''}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-sm text-gray-400">Not assigned</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-gray-600 max-w-md">{app.scope_rationale || '—'}</p>
-                      </td>
-                    </tr>
+                    <ApplicationRow
+                      key={app.id}
+                      application={app}
+                      memberships={memberships}
+                      onEdit={handleEditApplication}
+                    />
                   ))
                 )}
               </tbody>
@@ -492,6 +488,18 @@ export default function ApplicationsPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Application Drawer */}
+      <EditApplicationDrawer
+        application={editingApplication}
+        memberships={memberships}
+        isOpen={showEditDrawer}
+        onClose={() => {
+          setShowEditDrawer(false);
+          setEditingApplication(null);
+        }}
+        onSave={handleSaveApplication}
+      />
     </>
   );
 }

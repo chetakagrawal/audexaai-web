@@ -61,4 +61,62 @@ export const applicationsApi = {
       body: JSON.stringify(data),
     });
   },
+
+  /**
+   * Update an existing application
+   */
+  async updateApplication(
+    applicationId: string,
+    data: {
+      name?: string | null;
+      category?: string | null;
+      scope_rationale?: string | null;
+      business_owner_membership_id?: string | null;
+      it_owner_membership_id?: string | null;
+    }
+  ) {
+    return apiRequest<{
+      id: string;
+      tenant_id: string;
+      name: string;
+      category: string | null;
+      scope_rationale: string | null;
+      business_owner_membership_id: string | null;
+      it_owner_membership_id: string | null;
+      created_at: string;
+    }>(`/v1/applications/${applicationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Get controls for an application
+   */
+  async getApplicationControls(applicationId: string) {
+    return apiRequest<Array<{
+      id: string;
+      tenant_id: string;
+      created_by_membership_id: string;
+      control_code: string;
+      name: string;
+      category: string | null;
+      risk_rating: string | null;
+      control_type: string | null;
+      frequency: string | null;
+      is_key: boolean;
+      is_automated: boolean;
+      created_at: string;
+      applications: Array<{
+        id: string;
+        tenant_id: string;
+        name: string;
+        category: string | null;
+        scope_rationale: string | null;
+        business_owner_membership_id: string | null;
+        it_owner_membership_id: string | null;
+        created_at: string;
+      }>;
+    }>>(`/v1/applications/${applicationId}/controls`);
+  },
 };
