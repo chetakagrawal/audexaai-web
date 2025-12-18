@@ -12,7 +12,7 @@ export const convertApiControlToUI = (apiControl: ApiControl): Control => {
     id: apiControl.control_code || apiControl.id,
     name: apiControl.name,
     category: apiControl.category || 'Uncategorized',
-    applicationsInScope: [], // Will be populated from control_applications junction table
+    applicationsInScope: apiControl.applications?.map(app => app.name) || [],
     businessProcessOwner: { name: 'Not assigned', title: '' }, // Will be populated from memberships
     itOwner: { name: 'Not assigned', title: '' }, // Will be populated from memberships
     riskRating: (apiControl.risk_rating as 'High' | 'Medium' | 'Low') || 'Medium',

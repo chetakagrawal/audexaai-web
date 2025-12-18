@@ -22,6 +22,16 @@ export const controlsApi = {
       is_key: boolean;
       is_automated: boolean;
       created_at: string;
+      applications: Array<{
+        id: string;
+        tenant_id: string;
+        name: string;
+        category: string | null;
+        scope_rationale: string | null;
+        business_owner_membership_id: string | null;
+        it_owner_membership_id: string | null;
+        created_at: string;
+      }>;
     }>>('/v1/controls');
   },
 
@@ -42,6 +52,16 @@ export const controlsApi = {
       is_key: boolean;
       is_automated: boolean;
       created_at: string;
+      applications: Array<{
+        id: string;
+        tenant_id: string;
+        name: string;
+        category: string | null;
+        scope_rationale: string | null;
+        business_owner_membership_id: string | null;
+        it_owner_membership_id: string | null;
+        created_at: string;
+      }>;
     }>(`/v1/controls/${controlId}`);
   },
 
@@ -72,6 +92,16 @@ export const controlsApi = {
       is_key: boolean;
       is_automated: boolean;
       created_at: string;
+      applications: Array<{
+        id: string;
+        tenant_id: string;
+        name: string;
+        category: string | null;
+        scope_rationale: string | null;
+        business_owner_membership_id: string | null;
+        it_owner_membership_id: string | null;
+        created_at: string;
+      }>;
     }>('/v1/controls', {
       method: 'POST',
       body: JSON.stringify(data),

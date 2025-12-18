@@ -34,6 +34,17 @@ export interface ControlFormData {
   is_automated: boolean;
 }
 
+export interface ApiApplication {
+  id: string;
+  tenant_id: string;
+  name: string;
+  category: string | null;
+  scope_rationale: string | null;
+  business_owner_membership_id: string | null;
+  it_owner_membership_id: string | null;
+  created_at: string;
+}
+
 export interface ApiControl {
   id: string;
   tenant_id: string;
@@ -47,4 +58,5 @@ export interface ApiControl {
   is_key: boolean;
   is_automated: boolean;
   created_at: string;
+  applications: ApiApplication[];
 }

@@ -85,14 +85,8 @@ export default function RACMPage() {
       }
 
       // Convert the new control to UI format and add to the list
+      // Applications are now included in the API response
       const uiControl = convertApiControlToUI(newControl);
-      // If we have application names, add them to the UI control
-      if (applicationIds.length > 0) {
-        const appNames = applicationIds
-          .map((id) => applications.find((app) => app.id === id)?.name)
-          .filter(Boolean) as string[];
-        uiControl.applicationsInScope = appNames;
-      }
       setControls((prev) => [uiControl, ...prev]);
 
       setShowAddControlModal(false);
