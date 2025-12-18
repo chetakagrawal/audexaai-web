@@ -181,6 +181,28 @@ export default function ProjectsPage() {
     }
   }, [projectId]);
 
+  const handleUpdateProject = async (data: {
+    name: string;
+    status: string;
+    period_start: string | null;
+    period_end: string | null;
+  }) => {
+    if (!projectId) return;
+
+    try {
+      const updatedProject = await projectsApi.updateProject(projectId, data);
+      setProject(updatedProject);
+      // Also refresh the projects list if we're on list view
+      if (!isDetailView) {
+        await fetchProjects();
+      }
+    } catch (error) {
+      console.error('Failed to update project:', error);
+      alert('Failed to update project. Please try again.');
+      throw error;
+    }
+  };
+
   // Render detail view
   if (isDetailView) {
     if (isLoadingProject) {
@@ -214,6 +236,7 @@ export default function ProjectsPage() {
         onAddControl={handleAddControl}
         onRefreshControls={() => projectId ? fetchProjectControls(projectId) : Promise.resolve()}
         onLoadControls={handleLoadControls}
+        onUpdateProject={handleUpdateProject}
       />
     );
   }
