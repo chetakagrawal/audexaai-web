@@ -22,6 +22,8 @@ interface ProjectDetailViewProps {
     period_start: string | null;
     period_end: string | null;
   }) => Promise<void>;
+  onApplyRACM: () => Promise<void>;
+  onDeleteControl: (projectControlId: string) => Promise<void>;
 }
 
 export default function ProjectDetailView({
@@ -33,6 +35,8 @@ export default function ProjectDetailView({
   onRefreshControls,
   onLoadControls,
   onUpdateProject,
+  onApplyRACM,
+  onDeleteControl,
 }: ProjectDetailViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -153,7 +157,8 @@ export default function ProjectDetailView({
               controlsNotInProject={controlsNotInProject}
               isLoadingControls={isLoadingControls}
               onAddControl={() => setShowAddControlModal(true)}
-              onApplyRACM={() => alert('Apply RACM functionality coming soon')}
+              onApplyRACM={onApplyRACM}
+              onDeleteControl={onDeleteControl}
               getControlDetails={getControlDetails}
             />
           )}

@@ -77,6 +77,10 @@ export const projectsApi = {
       frequency_override: string | null;
       notes: string | null;
       created_at: string;
+      updated_at: string | null;
+      updated_by_membership_id: string | null;
+      deleted_at: string | null;
+      deleted_by_membership_id: string | null;
     }>>(`/v1/projects/${projectId}/controls`);
   },
 
@@ -98,6 +102,10 @@ export const projectsApi = {
       frequency_override: string | null;
       notes: string | null;
       created_at: string;
+      updated_at: string | null;
+      updated_by_membership_id: string | null;
+      deleted_at: string | null;
+      deleted_by_membership_id: string | null;
     }>(`/v1/projects/${projectId}/controls`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -129,6 +137,51 @@ export const projectsApi = {
     }>(`/v1/projects/${projectId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Add multiple controls to a project in bulk
+   */
+  async addControlsToProjectBulk(projectId: string, controlIds: string[]) {
+    return apiRequest<Array<{
+      id: string;
+      tenant_id: string;
+      project_id: string;
+      control_id: string;
+      is_key_override: boolean | null;
+      frequency_override: string | null;
+      notes: string | null;
+      created_at: string;
+      updated_at: string | null;
+      updated_by_membership_id: string | null;
+      deleted_at: string | null;
+      deleted_by_membership_id: string | null;
+    }>>(`/v1/projects/${projectId}/controls/bulk`, {
+      method: 'POST',
+      body: JSON.stringify(controlIds),
+    });
+  },
+
+  /**
+   * Delete (soft delete) a project control
+   */
+  async deleteProjectControl(projectId: string, projectControlId: string) {
+    return apiRequest<{
+      id: string;
+      tenant_id: string;
+      project_id: string;
+      control_id: string;
+      is_key_override: boolean | null;
+      frequency_override: string | null;
+      notes: string | null;
+      created_at: string;
+      updated_at: string | null;
+      updated_by_membership_id: string | null;
+      deleted_at: string | null;
+      deleted_by_membership_id: string | null;
+    }>(`/v1/projects/${projectId}/controls/${projectControlId}`, {
+      method: 'DELETE',
     });
   },
 };
