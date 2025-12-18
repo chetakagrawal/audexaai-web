@@ -46,7 +46,7 @@ export default function ControlDropdowns({
             <option value="">Select project...</option>
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
-                {project.name} - {project.year}
+                {project.name}{project.year ? ` - ${project.year}` : ''}
               </option>
             ))}
           </select>

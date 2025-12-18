@@ -5,19 +5,23 @@
 export interface Project {
   id: string;
   name: string;
-  year: string;
+  year?: string; // Optional, can be derived from period_start/period_end
+  status?: string;
+  period_start?: string | null;
+  period_end?: string | null;
 }
 
 export interface Control {
   id: string;
   code: string;
   name: string;
-  description: string;
-  riskRating: 'High' | 'Medium' | 'Low';
-  controlType: 'Preventive' | 'Detective' | 'Corrective';
-  frequency: string;
+  description?: string;
+  riskRating: 'High' | 'Medium' | 'Low' | null;
+  controlType: 'Preventive' | 'Detective' | 'Corrective' | null;
+  frequency: string | null;
   isKey: boolean;
   isAutomated: boolean;
+  category?: string | null;
 }
 
 export interface Application {

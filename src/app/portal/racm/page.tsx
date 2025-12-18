@@ -1,17 +1,63 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { controlsApi, applicationsApi } from '@/lib/api';
 import { Control, Application, ControlFormData } from './types';
-import { convertApiControlToUI } from './racmUtils';
+import { convertApiControlToUI, UUID_REGEX } from './racmUtils';
 import RACMBanner from './components/RACMBanner';
 import RACMMetrics from './components/RACMMetrics';
 import RACMFilters from './components/RACMFilters';
 import RACMTable from './components/RACMTable';
 import CreateControlModal from './components/CreateControlModal';
+import ControlDetailView from './components/ControlDetailView';
 
 export default function RACMPage() {
+  const pathname = usePathname();
+  
+  // Track current pathname including manual updates via pushState
+  const [currentPath, setCurrentPath] = useState(pathname || (typeof window !== 'undefined' ? window.location.pathname : ''));
+  
+  // Listen for pathname changes (including pushState)
+  useEffect(() => {
+    const updatePath = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    
+    // Listen for popstate events (back/forward navigation)
+    window.addEventListener('popstate', updatePath);
+    // Also listen for custom navigation events
+    window.addEventListener('pushstate', updatePath);
+    window.addEventListener('replacestate', updatePath);
+    
+    // Check for pathname changes periodically (fallback)
+    const interval = setInterval(() => {
+      if (window.location.pathname !== currentPath) {
+        updatePath();
+      }
+    }, 100);
+    
+    return () => {
+      window.removeEventListener('popstate', updatePath);
+      window.removeEventListener('pushstate', updatePath);
+      window.removeEventListener('replacestate', updatePath);
+      clearInterval(interval);
+    };
+  }, [currentPath]);
+  
+  // Also update when Next.js pathname changes
+  useEffect(() => {
+    if (pathname) {
+      setCurrentPath(pathname);
+    }
+  }, [pathname]);
+  
+  // Extract control ID from current path if on detail view
+  const controlIdMatch = currentPath?.match(/^\/portal\/racm\/([^/]+)$/);
+  const controlId = controlIdMatch ? controlIdMatch[1] : null;
+  const isDetailView = controlId !== null;
+  const isValidControlId = controlId && UUID_REGEX.test(controlId);
   const [showAddControlModal, setShowAddControlModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -19,10 +65,12 @@ export default function RACMPage() {
   const [controls, setControls] = useState<Control[]>([]);
   const [isLoadingControls, setIsLoadingControls] = useState(true);
 
-  // Fetch controls on mount
+  // Fetch controls on mount (only when on list view)
   useEffect(() => {
-    fetchControls();
-  }, []);
+    if (!isDetailView) {
+      fetchControls();
+    }
+  }, [isDetailView]);
 
   // Fetch applications when modal opens
   useEffect(() => {
@@ -100,6 +148,26 @@ export default function RACMPage() {
   };
 
 
+  // Render detail view
+  if (isDetailView) {
+    if (!isValidControlId) {
+      return (
+        <div className="text-center py-12">
+          <div className="text-gray-500 mb-4">Invalid control ID</div>
+          <button
+            onClick={() => window.history.pushState({}, '', '/portal/racm')}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 mt-4"
+          >
+            Back to RACM
+          </button>
+        </div>
+      );
+    }
+
+    return <ControlDetailView controlId={controlId} />;
+  }
+
+  // Render list view
   return (
     <>
       <div className="space-y-6">
