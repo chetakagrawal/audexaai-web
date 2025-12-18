@@ -32,3 +32,4 @@ export { setupApi, getSetupToken, setSetupToken, removeSetupToken } from './setu
 export { projectsApi } from './projects';
 export { controlsApi } from './controls';
 export { applicationsApi } from './applications';
+export { testAttributesApi, type TestAttribute, type TestAttributeCreate } from './testAttributes';
