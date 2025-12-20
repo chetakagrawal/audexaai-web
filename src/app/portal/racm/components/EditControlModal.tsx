@@ -22,6 +22,7 @@ export default function EditControlModal({
   const [formData, setFormData] = useState<ControlFormData>({
     control_code: control.controlCode,
     name: control.name,
+    description: control.description || '',
     category: control.category,
     risk_rating: control.riskRating,
     control_type: control.type,
@@ -35,6 +36,7 @@ export default function EditControlModal({
     setFormData({
       control_code: control.controlCode,
       name: control.name,
+      description: control.description || '',
       category: control.category,
       risk_rating: control.riskRating,
       control_type: control.type,
@@ -54,6 +56,7 @@ export default function EditControlModal({
     setFormData({
       control_code: control.controlCode,
       name: control.name,
+      description: control.description || '',
       category: control.category,
       risk_rating: control.riskRating,
       control_type: control.type,
@@ -100,6 +103,20 @@ export default function EditControlModal({
                 placeholder="e.g., User Access Provisioning"
               />
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Enter a detailed description of the control"
+              rows={4}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

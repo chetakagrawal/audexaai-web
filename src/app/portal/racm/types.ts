@@ -2,6 +2,7 @@ export interface Control {
   id: string; // UUID from backend
   controlCode: string; // Display code like "AC-001"
   name: string;
+  description: string | null;
   category: string;
   applicationsInScope: string[];
   businessProcessOwner: {
@@ -27,6 +28,7 @@ export interface Application {
 export interface ControlFormData {
   control_code: string;
   name: string;
+  description: string;
   category: string;
   risk_rating: string;
   control_type: string;
@@ -52,6 +54,7 @@ export interface ApiControl {
   created_by_membership_id: string;
   control_code: string;
   name: string;
+  description: string | null;
   category: string | null;
   risk_rating: string | null;
   control_type: string | null;
@@ -59,5 +62,11 @@ export interface ApiControl {
   is_key: boolean;
   is_automated: boolean;
   created_at: string;
-  applications: ApiApplication[];
+  updated_at: string;
+  updated_by_membership_id: string | null;
+  deleted_at: string | null;
+  deleted_by_membership_id: string | null;
+  row_version: number;
+  // Note: applications are no longer included in the response
+  // Use control_applications API to fetch them separately
 }

@@ -203,7 +203,6 @@ After configuration, test:
 - `/portal/projects/<uuid>`
 - `/portal/controls/<uuid>`
 - `/portal/applications/<uuid>`
-- `/portal/test-attributes/<uuid>`
 - Any future `/portal/<route>/<uuid>` pattern
 
 Just create the corresponding `page.tsx` file following the client-side routing pattern.

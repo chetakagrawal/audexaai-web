@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import { controlsApi, applicationsApi } from '@/lib/api';
+import { controlsApi, applicationsApi, controlApplicationsApi } from '@/lib/api';
 import { Control, Application, ControlFormData } from './types';
 import { convertApiControlToUI, UUID_REGEX } from './racmUtils';
 import RACMBanner from './components/RACMBanner';
@@ -83,8 +83,26 @@ export default function RACMPage() {
     try {
       setIsLoadingControls(true);
       const apiControls = await controlsApi.listControls();
-      const uiControls = apiControls.map(convertApiControlToUI);
-      setControls(uiControls);
+      
+      // Fetch applications for each control in parallel
+      const controlsWithApplications = await Promise.all(
+        apiControls.map(async (apiControl) => {
+          try {
+            // Fetch applications for this control (now returns Application[] directly)
+            const applications = await controlApplicationsApi.listControlApplications(apiControl.id);
+            // Extract application names directly from the response
+            const applicationNames = applications.map(app => app.name);
+            
+            return convertApiControlToUI(apiControl, applicationNames);
+          } catch (error) {
+            console.error(`Failed to fetch applications for control ${apiControl.id}:`, error);
+            // Return control without applications if fetch fails
+            return convertApiControlToUI(apiControl, []);
+          }
+        })
+      );
+      
+      setControls(controlsWithApplications);
     } catch (error) {
       console.error('Failed to fetch controls:', error);
     } finally {
@@ -112,6 +130,7 @@ export default function RACMPage() {
       const newControl = await controlsApi.createControl({
         control_code: formData.control_code,
         name: formData.name,
+        description: formData.description || null,
         category: formData.category || null,
         risk_rating: formData.risk_rating || null,
         control_type: formData.control_type || null,
@@ -121,20 +140,20 @@ export default function RACMPage() {
         application_ids: applicationIds.length > 0 ? applicationIds : undefined,
       });
 
-      // If backend doesn't support application_ids in createControl, use fallback
+      // Fetch application names for the new control using the updated API
+      let applicationNames: string[] = [];
       if (applicationIds.length > 0) {
         try {
-          await controlsApi.associateApplicationsWithControl(newControl.id, applicationIds);
-        } catch (assocError) {
-          // If association fails, log but don't fail the whole operation
-          // The control was created successfully, association can be retried
-          console.warn('Failed to associate applications with control:', assocError);
+          // Use the new API that returns Application[] directly
+          const applications = await controlApplicationsApi.listControlApplications(newControl.id);
+          applicationNames = applications.map(app => app.name);
+        } catch (error) {
+          console.warn('Failed to fetch application names:', error);
         }
       }
 
       // Convert the new control to UI format and add to the list
-      // Applications are now included in the API response
-      const uiControl = convertApiControlToUI(newControl);
+      const uiControl = convertApiControlToUI(newControl, applicationNames);
       setControls((prev) => [uiControl, ...prev]);
 
       setShowAddControlModal(false);
