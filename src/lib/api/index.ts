@@ -34,3 +34,6 @@ export { controlsApi, type ControlResponse } from './controls';
 export { controlApplicationsApi, type ControlApplicationResponse, type Application as ControlApplication } from './controlApplications';
 export { applicationsApi } from './applications';
 export { testAttributesApi, type TestAttribute, type TestAttributeCreate } from './testAttributes';
+
+// Shared types
+export { type ProjectControlResponse } from './types';

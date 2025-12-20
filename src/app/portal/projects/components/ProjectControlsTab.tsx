@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import { ProjectControl, Control } from '../types';
+import EditControlOverridesModal from './EditControlOverridesModal';
 
 interface ProjectControlsTabProps {
   projectControls: ProjectControl[];
@@ -11,6 +12,11 @@ interface ProjectControlsTabProps {
   onAddControl: () => void;
   onApplyRACM: () => void;
   onDeleteControl: (projectControlId: string) => Promise<void>;
+  onUpdateControl: (projectControlId: string, data: {
+    is_key_override: boolean | null;
+    frequency_override: string | null;
+    notes: string | null;
+  }) => Promise<void>;
   getControlDetails: (controlId: string) => Control | undefined;
 }
 
@@ -21,8 +27,34 @@ export default function ProjectControlsTab({
   onAddControl,
   onApplyRACM,
   onDeleteControl,
+  onUpdateControl,
   getControlDetails,
 }: ProjectControlsTabProps) {
+  const [editingControl, setEditingControl] = useState<{ projectControl: ProjectControl; control: Control } | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleEdit = (projectControl: ProjectControl) => {
+    const control = getControlDetails(projectControl.control_id);
+    if (control) {
+      setEditingControl({ projectControl, control });
+    }
+  };
+
+  const handleSave = async (data: {
+    is_key_override: boolean | null;
+    frequency_override: string | null;
+    notes: string | null;
+  }) => {
+    if (!editingControl) return;
+    setIsUpdating(true);
+    try {
+      await onUpdateControl(editingControl.projectControl.id, data);
+      setEditingControl(null);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -82,6 +114,9 @@ export default function ProjectControlsTab({
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Version
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Category
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -92,6 +127,9 @@ export default function ProjectControlsTab({
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Key Control
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Notes
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -110,6 +148,9 @@ export default function ProjectControlsTab({
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">{control.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      v{projectControl.control_version_num}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {control.category || '—'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -127,20 +168,34 @@ export default function ProjectControlsTab({
                         ? 'Yes'
                         : 'No'}
                     </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title={projectControl.notes || ''}>
+                      {projectControl.notes || '—'}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => {
-                          if (confirm(`Are you sure you want to remove "${control.control_code} - ${control.name}" from this project?`)) {
-                            onDeleteControl(projectControl.id);
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                        title="Delete control from project"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEdit(projectControl)}
+                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                          title="Edit control overrides"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to remove "${control.control_code} - ${control.name}" from this project?`)) {
+                              onDeleteControl(projectControl.id);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                          title="Remove control from project"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -148,6 +203,17 @@ export default function ProjectControlsTab({
             </tbody>
           </table>
         </div>
+      )}
+
+      {editingControl && (
+        <EditControlOverridesModal
+          projectControl={editingControl.projectControl}
+          control={editingControl.control}
+          isOpen={!!editingControl}
+          onClose={() => setEditingControl(null)}
+          onSave={handleSave}
+          isSaving={isUpdating}
+        />
       )}
     </div>
   );
