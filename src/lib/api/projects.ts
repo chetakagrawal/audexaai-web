@@ -4,39 +4,35 @@
 
 import { apiRequest } from './core';
 
+export interface ProjectResponse {
+  id: string;
+  tenant_id: string;
+  created_by_membership_id: string;
+  name: string;
+  status: string;
+  period_start: string | null;
+  period_end: string | null;
+  created_at: string;
+  updated_at: string | null;
+  updated_by_membership_id: string | null;
+  deleted_at: string | null;
+  deleted_by_membership_id: string | null;
+  row_version: number;
+}
+
 export const projectsApi = {
   /**
    * List all projects for the current tenant
    */
-  async listProjects() {
-    return apiRequest<Array<{
-      id: string;
-      tenant_id: string;
-      created_by_membership_id: string;
-      name: string;
-      status: string;
-      period_start: string | null;
-      period_end: string | null;
-      created_at: string;
-      updated_at: string;
-    }>>('/v1/projects');
+  async listProjects(): Promise<ProjectResponse[]> {
+    return apiRequest<ProjectResponse[]>('/v1/projects');
   },
 
   /**
    * Get a specific project by ID
    */
-  async getProject(projectId: string) {
-    return apiRequest<{
-      id: string;
-      tenant_id: string;
-      created_by_membership_id: string;
-      name: string;
-      status: string;
-      period_start: string | null;
-      period_end: string | null;
-      created_at: string;
-      updated_at: string;
-    }>(`/v1/projects/${projectId}`);
+  async getProject(projectId: string): Promise<ProjectResponse> {
+    return apiRequest<ProjectResponse>(`/v1/projects/${projectId}`);
   },
 
   /**
@@ -47,18 +43,8 @@ export const projectsApi = {
     status?: string;
     period_start?: string | null;
     period_end?: string | null;
-  }) {
-    return apiRequest<{
-      id: string;
-      tenant_id: string;
-      created_by_membership_id: string;
-      name: string;
-      status: string;
-      period_start: string | null;
-      period_end: string | null;
-      created_at: string;
-      updated_at: string;
-    }>('/v1/projects', {
+  }): Promise<ProjectResponse> {
+    return apiRequest<ProjectResponse>('/v1/projects', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -123,18 +109,8 @@ export const projectsApi = {
       period_start?: string | null;
       period_end?: string | null;
     }
-  ) {
-    return apiRequest<{
-      id: string;
-      tenant_id: string;
-      created_by_membership_id: string;
-      name: string;
-      status: string;
-      period_start: string | null;
-      period_end: string | null;
-      created_at: string;
-      updated_at: string;
-    }>(`/v1/projects/${projectId}`, {
+  ): Promise<ProjectResponse> {
+    return apiRequest<ProjectResponse>(`/v1/projects/${projectId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });

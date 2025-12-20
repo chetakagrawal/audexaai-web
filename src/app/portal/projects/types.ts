@@ -7,7 +7,11 @@ export interface ApiProject {
   period_start: string | null;
   period_end: string | null;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
+  updated_by_membership_id: string | null;
+  deleted_at: string | null;
+  deleted_by_membership_id: string | null;
+  row_version: number;
 }
 
 export interface Project {
