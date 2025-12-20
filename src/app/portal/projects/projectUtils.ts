@@ -22,7 +22,9 @@ export const convertApiProjectToUI = (apiProject: ApiProject): Project => {
     return `Until ${new Date(end!).toLocaleDateString()}`;
   };
 
-  const formatLastUpdated = (updatedAt: string): string => {
+  const formatLastUpdated = (updatedAt: string | null): string => {
+    if (!updatedAt) return 'Never updated';
+    
     const now = new Date();
     const updated = new Date(updatedAt);
     const diffMs = now.getTime() - updated.getTime();

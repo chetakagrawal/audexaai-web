@@ -31,6 +31,14 @@ export default function ProjectOverviewTab({ project }: ProjectOverviewTabProps)
               {new Date(project.created_at).toLocaleDateString()}
             </dd>
           </div>
+          {project.updated_at && (
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {new Date(project.updated_at).toLocaleDateString()}
+              </dd>
+            </div>
+          )}
         </dl>
       </div>
     </div>

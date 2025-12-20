@@ -29,7 +29,7 @@ export {
 export { authApi } from './auth';
 export { signupApi } from './signup';
 export { setupApi, getSetupToken, setSetupToken, removeSetupToken } from './setup';
-export { projectsApi } from './projects';
+export { projectsApi, type ProjectResponse } from './projects';
 export { controlsApi, type ControlResponse } from './controls';
 export { controlApplicationsApi, type ControlApplicationResponse, type Application as ControlApplication } from './controlApplications';
 export { applicationsApi } from './applications';
