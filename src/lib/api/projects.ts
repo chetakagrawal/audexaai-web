@@ -3,6 +3,7 @@
  */
 
 import { apiRequest } from './core';
+import { ProjectControlResponse } from './types';
 
 export interface ProjectResponse {
   id: string;
@@ -53,46 +54,23 @@ export const projectsApi = {
   /**
    * List controls for a project
    */
-  async listProjectControls(projectId: string) {
-    return apiRequest<Array<{
-      id: string;
-      tenant_id: string;
-      project_id: string;
-      control_id: string;
-      is_key_override: boolean | null;
-      frequency_override: string | null;
-      notes: string | null;
-      created_at: string;
-      updated_at: string | null;
-      updated_by_membership_id: string | null;
-      deleted_at: string | null;
-      deleted_by_membership_id: string | null;
-    }>>(`/v1/projects/${projectId}/controls`);
+  async listProjectControls(projectId: string): Promise<ProjectControlResponse[]> {
+    return apiRequest<ProjectControlResponse[]>(`/v1/projects/${projectId}/controls`);
   },
 
   /**
    * Add a control to a project
    */
-  async addControlToProject(projectId: string, data: {
-    control_id: string;
-    is_key_override?: boolean | null;
-    frequency_override?: string | null;
-    notes?: string | null;
-  }) {
-    return apiRequest<{
-      id: string;
-      tenant_id: string;
-      project_id: string;
+  async addControlToProject(
+    projectId: string,
+    data: {
       control_id: string;
-      is_key_override: boolean | null;
-      frequency_override: string | null;
-      notes: string | null;
-      created_at: string;
-      updated_at: string | null;
-      updated_by_membership_id: string | null;
-      deleted_at: string | null;
-      deleted_by_membership_id: string | null;
-    }>(`/v1/projects/${projectId}/controls`, {
+      is_key_override?: boolean | null;
+      frequency_override?: string | null;
+      notes?: string | null;
+    }
+  ): Promise<ProjectControlResponse> {
+    return apiRequest<ProjectControlResponse>(`/v1/projects/${projectId}/controls`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -117,46 +95,34 @@ export const projectsApi = {
   },
 
   /**
-   * Add multiple controls to a project in bulk
+   * Get a specific project-control mapping
    */
-  async addControlsToProjectBulk(projectId: string, controlIds: string[]) {
-    return apiRequest<Array<{
-      id: string;
-      tenant_id: string;
-      project_id: string;
-      control_id: string;
-      is_key_override: boolean | null;
-      frequency_override: string | null;
-      notes: string | null;
-      created_at: string;
-      updated_at: string | null;
-      updated_by_membership_id: string | null;
-      deleted_at: string | null;
-      deleted_by_membership_id: string | null;
-    }>>(`/v1/projects/${projectId}/controls/bulk`, {
-      method: 'POST',
-      body: JSON.stringify(controlIds),
+  async getProjectControl(projectControlId: string): Promise<ProjectControlResponse> {
+    return apiRequest<ProjectControlResponse>(`/v1/project-controls/${projectControlId}`);
+  },
+
+  /**
+   * Update project-control override fields
+   */
+  async updateProjectControlOverrides(
+    projectControlId: string,
+    data: {
+      is_key_override?: boolean | null;
+      frequency_override?: string | null;
+      notes?: string | null;
+    }
+  ): Promise<ProjectControlResponse> {
+    return apiRequest<ProjectControlResponse>(`/v1/project-controls/${projectControlId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     });
   },
 
   /**
    * Delete (soft delete) a project control
    */
-  async deleteProjectControl(projectId: string, projectControlId: string) {
-    return apiRequest<{
-      id: string;
-      tenant_id: string;
-      project_id: string;
-      control_id: string;
-      is_key_override: boolean | null;
-      frequency_override: string | null;
-      notes: string | null;
-      created_at: string;
-      updated_at: string | null;
-      updated_by_membership_id: string | null;
-      deleted_at: string | null;
-      deleted_by_membership_id: string | null;
-    }>(`/v1/projects/${projectId}/controls/${projectControlId}`, {
+  async deleteProjectControl(projectControlId: string): Promise<void> {
+    return apiRequest<void>(`/v1/project-controls/${projectControlId}`, {
       method: 'DELETE',
     });
   },

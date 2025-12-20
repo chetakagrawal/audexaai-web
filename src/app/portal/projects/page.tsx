@@ -202,8 +202,10 @@ export default function ProjectsPage() {
         return;
       }
       
-      // Add all controls to the project in bulk
-      await projectsApi.addControlsToProjectBulk(projectId, controlsToAdd);
+      // Add all controls to the project individually (bulk endpoint was removed)
+      for (const controlId of controlsToAdd) {
+        await projectsApi.addControlToProject(projectId, { control_id: controlId });
+      }
       
       // Refresh the project controls list
       await fetchProjectControls(projectId);
@@ -220,7 +222,7 @@ export default function ProjectsPage() {
     if (!projectId) return;
 
     try {
-      await projectsApi.deleteProjectControl(projectId, projectControlId);
+      await projectsApi.deleteProjectControl(projectControlId);
       
       // Refresh the project controls list
       await fetchProjectControls(projectId);
@@ -228,6 +230,29 @@ export default function ProjectsPage() {
     } catch (error) {
       console.error('Failed to delete control:', error);
       alert('Failed to delete control. Please try again.');
+      throw error;
+    }
+  };
+
+  const handleUpdateControl = async (
+    projectControlId: string,
+    data: {
+      is_key_override: boolean | null;
+      frequency_override: string | null;
+      notes: string | null;
+    }
+  ) => {
+    if (!projectId) return;
+
+    try {
+      await projectsApi.updateProjectControlOverrides(projectControlId, data);
+      
+      // Refresh the project controls list
+      await fetchProjectControls(projectId);
+      await fetchAvailableControls();
+    } catch (error) {
+      console.error('Failed to update control overrides:', error);
+      alert('Failed to update control overrides. Please try again.');
       throw error;
     }
   };
@@ -290,6 +315,7 @@ export default function ProjectsPage() {
         onUpdateProject={handleUpdateProject}
         onApplyRACM={handleApplyRACM}
         onDeleteControl={handleDeleteControl}
+        onUpdateControl={handleUpdateControl}
       />
     );
   }

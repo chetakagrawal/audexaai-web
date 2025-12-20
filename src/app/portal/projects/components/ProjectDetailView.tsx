@@ -24,6 +24,11 @@ interface ProjectDetailViewProps {
   }) => Promise<void>;
   onApplyRACM: () => Promise<void>;
   onDeleteControl: (projectControlId: string) => Promise<void>;
+  onUpdateControl: (projectControlId: string, data: {
+    is_key_override: boolean | null;
+    frequency_override: string | null;
+    notes: string | null;
+  }) => Promise<void>;
 }
 
 export default function ProjectDetailView({
@@ -37,6 +42,7 @@ export default function ProjectDetailView({
   onUpdateProject,
   onApplyRACM,
   onDeleteControl,
+  onUpdateControl,
 }: ProjectDetailViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -159,6 +165,7 @@ export default function ProjectDetailView({
               onAddControl={() => setShowAddControlModal(true)}
               onApplyRACM={onApplyRACM}
               onDeleteControl={onDeleteControl}
+              onUpdateControl={onUpdateControl}
               getControlDetails={getControlDetails}
             />
           )}
