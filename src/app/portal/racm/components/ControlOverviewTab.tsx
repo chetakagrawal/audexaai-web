@@ -24,6 +24,12 @@ export default function ControlOverviewTab({ control }: ControlOverviewTabProps)
             <dt className="text-sm font-medium text-gray-500">Control Name</dt>
             <dd className="mt-1 text-sm text-gray-900">{control.name}</dd>
           </div>
+          <div className="sm:col-span-2">
+            <dt className="text-sm font-medium text-gray-500">Description</dt>
+            <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
+              {control.description || 'No description provided'}
+            </dd>
+          </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Category</dt>
             <dd className="mt-1">
@@ -67,20 +73,6 @@ export default function ControlOverviewTab({ control }: ControlOverviewTabProps)
             </dd>
           </div>
         </dl>
-      </div>
-
-      {/* Applications in Scope */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Applications in Scope</h2>
-        {control.applicationsInScope.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {control.applicationsInScope.map((app, index) => (
-              <Badge key={index} variant="info">{app}</Badge>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">No applications assigned</p>
-        )}
       </div>
 
       {/* Ownership */}

@@ -14,6 +14,12 @@ export interface TestAttribute {
   test_procedure: string | null;
   expected_evidence: string | null;
   created_at: string;
+  created_by_membership_id: string | null;
+  updated_at: string | null;
+  updated_by_membership_id: string | null;
+  deleted_at: string | null;
+  deleted_by_membership_id: string | null;
+  row_version: number;
 }
 
 export interface TestAttributeCreate {

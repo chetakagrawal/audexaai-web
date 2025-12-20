@@ -10,13 +10,19 @@ export const getRiskColor = (rating: string): string => {
 };
 
 // Convert API control to UI control format
-export const convertApiControlToUI = (apiControl: ApiControl): Control => {
+// Note: applications are no longer included in the API response
+// They should be fetched separately and passed in if needed
+export const convertApiControlToUI = (
+  apiControl: ApiControl,
+  applicationNames: string[] = []
+): Control => {
   return {
     id: apiControl.id, // Use UUID for navigation
     controlCode: apiControl.control_code, // Use control_code for display
     name: apiControl.name,
+    description: apiControl.description,
     category: apiControl.category || 'Uncategorized',
-    applicationsInScope: apiControl.applications?.map(app => app.name) || [],
+    applicationsInScope: applicationNames, // Applications must be fetched separately
     businessProcessOwner: { name: 'Not assigned', title: '' }, // Will be populated from memberships
     itOwner: { name: 'Not assigned', title: '' }, // Will be populated from memberships
     riskRating: (apiControl.risk_rating as 'High' | 'Medium' | 'Low') || 'Medium',

@@ -199,9 +199,9 @@ aws s3 sync out/ s3://your-bucket-name --delete
 
 ### Adding New Entity Types
 
-To add a new entity detail page (e.g., `/portal/test-attributes/<uuid>`):
+To add a new entity detail page (e.g., `/portal/applications/<uuid>`):
 
-1. Create `src/app/portal/test-attributes/page.tsx`
+1. Create `src/app/portal/applications/page.tsx`
 2. Follow the same pattern as `projects/page.tsx`:
    - Use `usePathname()` to detect list vs detail
    - Extract ID from URL

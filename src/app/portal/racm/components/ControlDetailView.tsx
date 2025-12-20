@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { controlsApi, applicationsApi, testAttributesApi } from '@/lib/api';
-import { Control, Application, ControlFormData } from '../types';
+import { controlsApi, testAttributesApi } from '@/lib/api';
+import { Control, ControlFormData } from '../types';
 import ControlOverviewTab from './ControlOverviewTab';
-import ControlApplicationsTab from './ControlApplicationsTab';
 import ControlTestAttributesTab from './ControlTestAttributesTab';
 import EditControlModal from './EditControlModal';
 
-type Tab = 'overview' | 'applications' | 'test-attributes';
+type Tab = 'overview' | 'test-attributes';
 
 interface ControlDetailViewProps {
   controlId: string;
@@ -19,10 +18,7 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [control, setControl] = useState<Control | null>(null);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [allApplications, setAllApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingApplications, setIsLoadingApplications] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -30,13 +26,6 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
   useEffect(() => {
     fetchControl();
   }, [controlId]);
-
-  // Fetch applications when applications tab is activated
-  useEffect(() => {
-    if (activeTab === 'applications' && control) {
-      fetchAllApplications();
-    }
-  }, [activeTab, control]);
 
   const fetchControl = async () => {
     try {
@@ -48,8 +37,9 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
         id: apiControl.id,
         controlCode: apiControl.control_code,
         name: apiControl.name,
+        description: apiControl.description,
         category: apiControl.category || '',
-        applicationsInScope: apiControl.applications.map(app => app.name),
+        applicationsInScope: [],
         businessProcessOwner: {
           name: 'Not assigned',
           title: '',
@@ -66,26 +56,10 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
       };
       
       setControl(uiControl);
-      setApplications(apiControl.applications.map(app => ({
-        id: app.id,
-        name: app.name,
-      })));
     } catch (error) {
       console.error('Failed to fetch control:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchAllApplications = async () => {
-    try {
-      setIsLoadingApplications(true);
-      const apps = await applicationsApi.listApplications();
-      setAllApplications(apps);
-    } catch (error) {
-      console.error('Failed to fetch applications:', error);
-    } finally {
-      setIsLoadingApplications(false);
     }
   };
 
@@ -97,6 +71,7 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
       await controlsApi.updateControl(controlId, {
         control_code: formData.control_code,
         name: formData.name,
+        description: formData.description || null,
         category: formData.category || null,
         risk_rating: formData.risk_rating || null,
         control_type: formData.control_type || null,
@@ -115,22 +90,6 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
     }
   };
 
-  const handleUpdateApplications = async (applicationIds: string[]) => {
-    if (!control) return;
-
-    try {
-      setIsSaving(true);
-      // Use replace endpoint to remove old and add new applications
-      await controlsApi.replaceControlApplications(controlId, applicationIds);
-      await fetchControl(); // Refresh to get updated applications
-    } catch (error) {
-      console.error('Failed to update applications:', error);
-      alert('Failed to update applications. Please try again.');
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -197,16 +156,6 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
               Overview
             </button>
             <button
-              onClick={() => setActiveTab('applications')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'applications'
-                  ? 'border-primary-500 text-primary-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Applications
-            </button>
-            <button
               onClick={() => setActiveTab('test-attributes')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'test-attributes'
@@ -222,18 +171,12 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
         {/* Tab Content */}
         <div>
           {activeTab === 'overview' && <ControlOverviewTab control={control} />}
-          {activeTab === 'applications' && (
-            <ControlApplicationsTab
-              control={control}
-              currentApplications={applications}
-              allApplications={allApplications}
-              isLoadingApplications={isLoadingApplications}
-              onUpdateApplications={handleUpdateApplications}
-              isSaving={isSaving}
-            />
-          )}
           {activeTab === 'test-attributes' && (
-            <ControlTestAttributesTab controlId={controlId} />
+            <ControlTestAttributesTab 
+              controlId={controlId}
+              controlCode={control.controlCode}
+              controlName={control.name}
+            />
           )}
         </div>
       </div>
