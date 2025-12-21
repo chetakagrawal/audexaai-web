@@ -2,8 +2,11 @@
 
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
 import { ProjectControl, Control } from '../types';
+import { ApplicationResponse } from '@/lib/api';
 import EditControlOverridesModal from './EditControlOverridesModal';
+import ScopeApplicationsModal from './ScopeApplicationsModal';
 
 interface ProjectControlsTabProps {
   projectControls: ProjectControl[];
@@ -18,6 +21,9 @@ interface ProjectControlsTabProps {
     notes: string | null;
   }) => Promise<void>;
   getControlDetails: (controlId: string) => Control | undefined;
+  allApplications: ApplicationResponse[];
+  scopedApplicationsByControl: Record<string, ApplicationResponse[]>;
+  onScopeApplications: (projectControlId: string, applicationIds: string[]) => Promise<void>;
 }
 
 export default function ProjectControlsTab({
@@ -29,9 +35,14 @@ export default function ProjectControlsTab({
   onDeleteControl,
   onUpdateControl,
   getControlDetails,
+  allApplications,
+  scopedApplicationsByControl,
+  onScopeApplications,
 }: ProjectControlsTabProps) {
   const [editingControl, setEditingControl] = useState<{ projectControl: ProjectControl; control: Control } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [scopingControl, setScopingControl] = useState<{ projectControl: ProjectControl; control: Control } | null>(null);
+  const [isSavingScope, setIsSavingScope] = useState(false);
 
   const handleEdit = (projectControl: ProjectControl) => {
     const control = getControlDetails(projectControl.control_id);
@@ -53,6 +64,71 @@ export default function ProjectControlsTab({
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleScopeApplications = (projectControl: ProjectControl) => {
+    const control = getControlDetails(projectControl.control_id);
+    if (control) {
+      setScopingControl({ projectControl, control });
+    }
+  };
+
+  const handleSaveScope = async (applicationIds: string[]) => {
+    if (!scopingControl) return;
+    setIsSavingScope(true);
+    try {
+      await onScopeApplications(scopingControl.projectControl.id, applicationIds);
+      setScopingControl(null);
+    } finally {
+      setIsSavingScope(false);
+    }
+  };
+
+  const renderAppsColumn = (projectControl: ProjectControl) => {
+    const scopedApps = scopedApplicationsByControl[projectControl.id] || [];
+    const displayApps = scopedApps.slice(0, 3);
+    const remainingCount = scopedApps.length - displayApps.length;
+
+    if (scopedApps.length === 0) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">—</span>
+          <button
+            onClick={() => handleScopeApplications(projectControl)}
+            className="text-blue-600 hover:text-blue-800 transition-colors"
+            title="Scope applications"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        {displayApps.map(app => (
+          <Badge key={app.id} variant="info" className="text-xs">
+            {app.name}
+          </Badge>
+        ))}
+        {remainingCount > 0 && (
+          <Badge variant="default" className="text-xs">
+            +{remainingCount}
+          </Badge>
+        )}
+        <button
+          onClick={() => handleScopeApplications(projectControl)}
+          className="text-blue-600 hover:text-blue-800 transition-colors"
+          title="Edit scoped applications"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -117,6 +193,9 @@ export default function ProjectControlsTab({
                   Version
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Apps in Scope
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Category
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -149,6 +228,9 @@ export default function ProjectControlsTab({
                     <td className="px-6 py-4 text-sm text-gray-900">{control.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       v{projectControl.control_version_num}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {renderAppsColumn(projectControl)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {control.category || '—'}
@@ -213,6 +295,20 @@ export default function ProjectControlsTab({
           onClose={() => setEditingControl(null)}
           onSave={handleSave}
           isSaving={isUpdating}
+        />
+      )}
+
+      {scopingControl && (
+        <ScopeApplicationsModal
+          isOpen={!!scopingControl}
+          onClose={() => setScopingControl(null)}
+          onSave={handleSaveScope}
+          projectControlId={scopingControl.projectControl.id}
+          controlCode={scopingControl.control.control_code}
+          controlName={scopingControl.control.name}
+          allApplications={allApplications}
+          scopedApplications={scopedApplicationsByControl[scopingControl.projectControl.id] || []}
+          isSaving={isSavingScope}
         />
       )}
     </div>

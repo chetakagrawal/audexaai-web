@@ -3,7 +3,7 @@
  */
 
 import { apiRequest } from './core';
-import { ProjectControlResponse } from './types';
+import { ProjectControlResponse, ApplicationResponse, ProjectControlApplicationResponse } from './types';
 
 export interface ProjectResponse {
   id: string;
@@ -123,6 +123,36 @@ export const projectsApi = {
    */
   async deleteProjectControl(projectControlId: string): Promise<void> {
     return apiRequest<void>(`/v1/project-controls/${projectControlId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * List applications scoped to a project control
+   * Note: Backend returns ApplicationResponse[] directly, not ProjectControlApplicationResponse[]
+   */
+  async listProjectControlApplications(projectControlId: string): Promise<ApplicationResponse[]> {
+    return apiRequest<ApplicationResponse[]>(`/v1/project-controls/${projectControlId}/applications`);
+  },
+
+  /**
+   * Add an application to a project control
+   */
+  async addApplicationToProjectControl(
+    projectControlId: string,
+    data: { application_id: string }
+  ): Promise<ProjectControlApplicationResponse> {
+    return apiRequest<ProjectControlApplicationResponse>(`/v1/project-controls/${projectControlId}/applications`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Remove an application from a project control
+   */
+  async removeApplicationFromProjectControl(pcaId: string): Promise<void> {
+    return apiRequest<void>(`/v1/project-control-applications/${pcaId}`, {
       method: 'DELETE',
     });
   },

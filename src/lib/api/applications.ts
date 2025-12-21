@@ -3,22 +3,14 @@
  */
 
 import { apiRequest } from './core';
+import { ApplicationResponse } from './types';
 
 export const applicationsApi = {
   /**
    * List all applications for the current tenant
    */
-  async listApplications() {
-    return apiRequest<Array<{
-      id: string;
-      tenant_id: string;
-      name: string;
-      category: string | null;
-      scope_rationale: string | null;
-      business_owner_membership_id: string | null;
-      it_owner_membership_id: string | null;
-      created_at: string;
-    }>>('/v1/applications');
+  async listApplications(): Promise<ApplicationResponse[]> {
+    return apiRequest<ApplicationResponse[]>('/v1/applications');
   },
 
   /**

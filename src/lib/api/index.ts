@@ -36,4 +36,4 @@ export { applicationsApi } from './applications';
 export { testAttributesApi, type TestAttribute, type TestAttributeCreate } from './testAttributes';
 
 // Shared types
-export { type ProjectControlResponse } from './types';
+export { type ProjectControlResponse, type ApplicationResponse, type ProjectControlApplicationResponse } from './types';
