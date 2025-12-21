@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ApiProject, ProjectControl, Control, Tab } from '../types';
+import { ApplicationResponse } from '@/lib/api';
 import ProjectOverviewTab from './ProjectOverviewTab';
 import ProjectControlsTab from './ProjectControlsTab';
 import AddControlModal from './AddControlModal';
@@ -29,6 +30,9 @@ interface ProjectDetailViewProps {
     frequency_override: string | null;
     notes: string | null;
   }) => Promise<void>;
+  allApplications: ApplicationResponse[];
+  scopedApplicationsByControl: Record<string, ApplicationResponse[]>;
+  onScopeApplications: (projectControlId: string, applicationIds: string[]) => Promise<void>;
 }
 
 export default function ProjectDetailView({
@@ -43,6 +47,9 @@ export default function ProjectDetailView({
   onApplyRACM,
   onDeleteControl,
   onUpdateControl,
+  allApplications,
+  scopedApplicationsByControl,
+  onScopeApplications,
 }: ProjectDetailViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -167,6 +174,9 @@ export default function ProjectDetailView({
               onDeleteControl={onDeleteControl}
               onUpdateControl={onUpdateControl}
               getControlDetails={getControlDetails}
+              allApplications={allApplications}
+              scopedApplicationsByControl={scopedApplicationsByControl}
+              onScopeApplications={onScopeApplications}
             />
           )}
         </div>

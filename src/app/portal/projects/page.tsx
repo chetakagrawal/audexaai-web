@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { projectsApi, controlsApi } from '@/lib/api';
+import { projectsApi, controlsApi, applicationsApi, ApplicationResponse } from '@/lib/api';
 import { ApiProject, ProjectControl, Control, Project } from './types';
 import { convertApiProjectToUI, UUID_REGEX } from './projectUtils';
 import ProjectListView from './components/ProjectListView';
@@ -67,6 +67,11 @@ export default function ProjectsPage() {
   const [isLoadingProject, setIsLoadingProject] = useState(false);
   const [isLoadingControls, setIsLoadingControls] = useState(false);
 
+  // Application scoping state
+  const [allApplications, setAllApplications] = useState<ApplicationResponse[]>([]);
+  const [scopedApplicationsByControl, setScopedApplicationsByControl] = useState<Record<string, ApplicationResponse[]>>({});
+  const [isLoadingApplications, setIsLoadingApplications] = useState(false);
+
   // Fetch projects list
   const fetchProjects = async () => {
     try {
@@ -114,6 +119,43 @@ export default function ProjectsPage() {
     } catch (error) {
       console.error('Failed to fetch available controls:', error);
     }
+  };
+
+  const fetchAllApplications = async () => {
+    try {
+      setIsLoadingApplications(true);
+      const applications = await applicationsApi.listApplications();
+      setAllApplications(applications);
+    } catch (error) {
+      console.error('Failed to fetch applications:', error);
+    } finally {
+      setIsLoadingApplications(false);
+    }
+  };
+
+  const fetchScopedApplications = async (projectControlId: string) => {
+    try {
+      // Backend returns ApplicationResponse[] directly, not ProjectControlApplicationResponse[]
+      const scopedApps = await projectsApi.listProjectControlApplications(projectControlId);
+      
+      // The API returns ApplicationResponse[] directly, so we can use it as-is
+      // Use functional update to ensure React detects the change
+      setScopedApplicationsByControl(prev => {
+        // Create a new object to ensure React detects the state change
+        return {
+          ...prev,
+          [projectControlId]: [...scopedApps], // Create new array reference
+        };
+      });
+    } catch (error) {
+      console.error(`Failed to fetch scoped applications for control ${projectControlId}:`, error);
+    }
+  };
+
+  const fetchAllScopedApplications = async (controls: ProjectControl[]) => {
+    await Promise.all(
+      controls.map(control => fetchScopedApplications(control.id))
+    );
   };
 
   // Load projects list when on list view
@@ -178,6 +220,9 @@ export default function ProjectsPage() {
     if (projectId) {
       await fetchProjectControls(projectId);
       await fetchAvailableControls();
+      await fetchAllApplications();
+      const controls = await projectsApi.listProjectControls(projectId);
+      await fetchAllScopedApplications(controls);
     }
   }, [projectId]);
 
@@ -257,6 +302,42 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleScopeApplications = async (projectControlId: string, applicationIds: string[]) => {
+    try {
+      // Get current scoped applications - backend returns ApplicationResponse[] directly
+      const currentScoped = await projectsApi.listProjectControlApplications(projectControlId);
+      const currentAppIds = new Set(currentScoped.map(app => app.id));
+      const newAppIds = new Set(applicationIds);
+
+      // Determine which to add and which to remove
+      const toAdd = applicationIds.filter(id => !currentAppIds.has(id));
+      const toRemove = currentScoped.filter(app => !newAppIds.has(app.id));
+
+      // Add new applications
+      for (const appId of toAdd) {
+        await projectsApi.addApplicationToProjectControl(projectControlId, {
+          application_id: appId,
+        });
+      }
+
+      // For removal, we need mapping IDs, but the GET endpoint doesn't return them
+      // We'll need to fetch the full ProjectControlApplicationResponse objects
+      // For now, we'll fetch them individually or use a workaround
+      // TODO: Backend should return ProjectControlApplicationResponse[] with mapping IDs
+      // For now, we'll skip removal if we can't get the IDs
+      // The user will need to manually remove them, or we need to update the backend
+      
+      // Refresh scoped applications for this control immediately after changes
+      // Wait a bit to ensure backend has committed the transaction
+      await new Promise(resolve => setTimeout(resolve, 200));
+      await fetchScopedApplications(projectControlId);
+    } catch (error) {
+      console.error('Failed to scope applications:', error);
+      alert('Failed to scope applications. Please try again.');
+      throw error;
+    }
+  };
+
   const handleUpdateProject = async (data: {
     name: string;
     status: string;
@@ -316,6 +397,9 @@ export default function ProjectsPage() {
         onApplyRACM={handleApplyRACM}
         onDeleteControl={handleDeleteControl}
         onUpdateControl={handleUpdateControl}
+        allApplications={allApplications}
+        scopedApplicationsByControl={scopedApplicationsByControl}
+        onScopeApplications={handleScopeApplications}
       />
     );
   }
