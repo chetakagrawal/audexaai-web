@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { ProjectControl, Control } from '../types';
-import { ApplicationResponse } from '@/lib/api';
+import { ApplicationResponse, projectTestAttributeOverridesApi } from '@/lib/api';
 import EditControlOverridesModal from './EditControlOverridesModal';
 import ScopeApplicationsModal from './ScopeApplicationsModal';
 
@@ -24,6 +24,7 @@ interface ProjectControlsTabProps {
   allApplications: ApplicationResponse[];
   scopedApplicationsByControl: Record<string, ApplicationResponse[]>;
   onScopeApplications: (projectControlId: string, applicationIds: string[]) => Promise<void>;
+  onNavigateToLineItems?: (projectControlId: string) => void;
 }
 
 export default function ProjectControlsTab({
@@ -38,11 +39,13 @@ export default function ProjectControlsTab({
   allApplications,
   scopedApplicationsByControl,
   onScopeApplications,
+  onNavigateToLineItems,
 }: ProjectControlsTabProps) {
   const [editingControl, setEditingControl] = useState<{ projectControl: ProjectControl; control: Control } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [scopingControl, setScopingControl] = useState<{ projectControl: ProjectControl; control: Control } | null>(null);
   const [isSavingScope, setIsSavingScope] = useState(false);
+  const [overrideCounts, setOverrideCounts] = useState<Record<string, number>>({});
 
   const handleEdit = (projectControl: ProjectControl) => {
     const control = getControlDetails(projectControl.control_id);
@@ -84,15 +87,53 @@ export default function ProjectControlsTab({
     }
   };
 
+  // Fetch override counts for all project controls
+  useEffect(() => {
+    const fetchOverrideCounts = async () => {
+      const counts: Record<string, number> = {};
+      
+      for (const projectControl of projectControls) {
+        try {
+          const overrides = await projectTestAttributeOverridesApi.listOverridesForProjectControl(
+            projectControl.id
+          );
+          const activeOverrides = overrides.filter((o) => !o.deleted_at);
+          counts[projectControl.id] = activeOverrides.length;
+        } catch (err) {
+          console.error(`Failed to fetch override count for control ${projectControl.id}:`, err);
+          counts[projectControl.id] = 0;
+        }
+      }
+      
+      setOverrideCounts(counts);
+    };
+
+    if (projectControls.length > 0) {
+      fetchOverrideCounts();
+    }
+  }, [projectControls]);
+
   const renderAppsColumn = (projectControl: ProjectControl) => {
     const scopedApps = scopedApplicationsByControl[projectControl.id] || [];
     const displayApps = scopedApps.slice(0, 3);
     const remainingCount = scopedApps.length - displayApps.length;
+    const overrideCount = overrideCounts[projectControl.id] || 0;
 
     if (scopedApps.length === 0) {
       return (
         <div className="flex items-center gap-2">
           <span className="text-gray-400">—</span>
+          {overrideCount > 0 && (
+            <button
+              onClick={() => onNavigateToLineItems?.(projectControl.id)}
+              className="text-blue-600 hover:text-blue-800 transition-colors"
+              title={`${overrideCount} override(s) - Click to view in Line Items`}
+            >
+              <Badge variant="info" className="text-xs cursor-pointer">
+                Overrides: {overrideCount}
+              </Badge>
+            </button>
+          )}
           <button
             onClick={() => handleScopeApplications(projectControl)}
             className="text-blue-600 hover:text-blue-800 transition-colors"
@@ -117,6 +158,17 @@ export default function ProjectControlsTab({
           <Badge variant="default" className="text-xs">
             +{remainingCount}
           </Badge>
+        )}
+        {overrideCount > 0 && (
+          <button
+            onClick={() => onNavigateToLineItems?.(projectControl.id)}
+            className="text-blue-600 hover:text-blue-800 transition-colors"
+            title={`${overrideCount} override(s) - Click to view in Line Items`}
+          >
+            <Badge variant="info" className="text-xs cursor-pointer">
+              Overrides: {overrideCount}
+            </Badge>
+          </button>
         )}
         <button
           onClick={() => handleScopeApplications(projectControl)}

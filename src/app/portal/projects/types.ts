@@ -60,4 +60,22 @@ export interface Control {
   is_automated: boolean;
 }
 
-export type Tab = 'overview' | 'controls';
+export type Tab = 'overview' | 'controls' | 'line-items';
+
+export interface LineItem {
+  id: string; // composite key: `${projectControlId}-${applicationId || 'null'}-${testAttributeId}`
+  projectControlId: string;
+  projectControlCode: string;
+  projectControlName: string;
+  applicationId: string | null;
+  applicationName: string | null;
+  testAttributeId: string;
+  testAttributeCode: string;
+  testAttributeName: string;
+  effectiveProcedure: string | null;
+  effectiveEvidence: string | null;
+  effectiveFrequency: string | null;
+  source: 'base' | 'project_override';
+  overrideId: string | null;
+  isOverridden: boolean;
+}

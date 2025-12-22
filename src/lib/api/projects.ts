@@ -149,11 +149,27 @@ export const projectsApi = {
   },
 
   /**
-   * Remove an application from a project control
+   * Remove an application from a project control by mapping ID
    */
   async removeApplicationFromProjectControl(pcaId: string): Promise<void> {
     return apiRequest<void>(`/v1/project-control-applications/${pcaId}`, {
       method: 'DELETE',
     });
+  },
+
+  /**
+   * Remove an application from a project control by project_control_id and application_id
+   * This is more convenient than the pca_id version as it doesn't require fetching mapping IDs first.
+   */
+  async removeApplicationFromProjectControlByIds(
+    projectControlId: string,
+    applicationId: string
+  ): Promise<void> {
+    return apiRequest<void>(
+      `/v1/project-controls/${projectControlId}/applications/${applicationId}`,
+      {
+        method: 'DELETE',
+      }
+    );
   },
 };

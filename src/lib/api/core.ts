@@ -123,6 +123,12 @@ export async function apiRequest<T>(
       throw new Error(error.detail || 'Request failed');
     }
 
+    // Handle 204 No Content responses (no body to parse)
+    if (response.status === 204) {
+      console.log(`[API] Success: 204 No Content`);
+      return undefined as T;
+    }
+
     const data = await response.json();
     console.log(`[API] Success:`, data);
     return data;
