@@ -6,6 +6,7 @@ import { ApiProject, ProjectControl, Control, Tab } from '../types';
 import { ApplicationResponse } from '@/lib/api';
 import ProjectOverviewTab from './ProjectOverviewTab';
 import ProjectControlsTab from './ProjectControlsTab';
+import LineItemsTab from './LineItemsTab';
 import AddControlModal from './AddControlModal';
 import EditProjectModal from './EditProjectModal';
 
@@ -57,6 +58,7 @@ export default function ProjectDetailView({
   const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [selectedControlId, setSelectedControlId] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [lineItemsFilterControlId, setLineItemsFilterControlId] = useState<string | null>(null);
   const controlsLoadedRef = useRef(false);
 
   // Load controls when controls tab is activated (only once per tab activation)
@@ -70,6 +72,12 @@ export default function ProjectDetailView({
       controlsLoadedRef.current = false;
     }
   }, [activeTab, onLoadControls, isLoadingControls]);
+
+  // Handle navigation to line items tab with filter
+  const handleNavigateToLineItems = (projectControlId: string | null) => {
+    setLineItemsFilterControlId(projectControlId);
+    setActiveTab('line-items');
+  };
 
   const controlsNotInProject = availableControls.filter(
     control => !projectControls.some(pc => pc.control_id === control.id)
@@ -158,6 +166,19 @@ export default function ProjectDetailView({
                 </span>
               )}
             </button>
+            <button
+              onClick={() => {
+                setLineItemsFilterControlId(null);
+                setActiveTab('line-items');
+              }}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'line-items'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Line Items
+            </button>
           </nav>
         </div>
 
@@ -177,6 +198,16 @@ export default function ProjectDetailView({
               allApplications={allApplications}
               scopedApplicationsByControl={scopedApplicationsByControl}
               onScopeApplications={onScopeApplications}
+              onNavigateToLineItems={handleNavigateToLineItems}
+            />
+          )}
+          {activeTab === 'line-items' && (
+            <LineItemsTab
+              projectId={project.id}
+              projectControls={projectControls}
+              getControlDetails={getControlDetails}
+              scopedApplicationsByControl={scopedApplicationsByControl}
+              filterByProjectControlId={lineItemsFilterControlId}
             />
           )}
         </div>

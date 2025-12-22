@@ -34,6 +34,12 @@ export { controlsApi, type ControlResponse } from './controls';
 export { controlApplicationsApi, type ControlApplicationResponse, type Application as ControlApplication } from './controlApplications';
 export { applicationsApi } from './applications';
 export { testAttributesApi, type TestAttribute, type TestAttributeCreate } from './testAttributes';
+export {
+  projectTestAttributeOverridesApi,
+  type ProjectTestAttributeOverrideResponse,
+  type ProjectTestAttributeOverrideUpsert,
+  type EffectiveTestAttributeResponse,
+} from './projectTestAttributeOverrides';
 
 // Shared types
 export { type ProjectControlResponse, type ApplicationResponse, type ProjectControlApplicationResponse } from './types';

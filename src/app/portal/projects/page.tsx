@@ -314,26 +314,29 @@ export default function ProjectsPage() {
       const toRemove = currentScoped.filter(app => !newAppIds.has(app.id));
 
       // Add new applications
-      for (const appId of toAdd) {
-        await projectsApi.addApplicationToProjectControl(projectControlId, {
-          application_id: appId,
-        });
+      if (toAdd.length > 0) {
+        for (const appId of toAdd) {
+          await projectsApi.addApplicationToProjectControl(projectControlId, {
+            application_id: appId,
+          });
+        }
       }
 
-      // For removal, we need mapping IDs, but the GET endpoint doesn't return them
-      // We'll need to fetch the full ProjectControlApplicationResponse objects
-      // For now, we'll fetch them individually or use a workaround
-      // TODO: Backend should return ProjectControlApplicationResponse[] with mapping IDs
-      // For now, we'll skip removal if we can't get the IDs
-      // The user will need to manually remove them, or we need to update the backend
-      
+      // Remove applications using the new endpoint that accepts project_control_id + application_id
+      if (toRemove.length > 0) {
+        for (const app of toRemove) {
+          await projectsApi.removeApplicationFromProjectControlByIds(projectControlId, app.id);
+        }
+      }
+
       // Refresh scoped applications for this control immediately after changes
       // Wait a bit to ensure backend has committed the transaction
       await new Promise(resolve => setTimeout(resolve, 200));
       await fetchScopedApplications(projectControlId);
     } catch (error) {
       console.error('Failed to scope applications:', error);
-      alert('Failed to scope applications. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to scope applications: ${errorMessage}. Please try again.`);
       throw error;
     }
   };
