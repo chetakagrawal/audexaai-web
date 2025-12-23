@@ -7,9 +7,10 @@ import { getRiskColor } from '../racmUtils';
 
 interface RACMTableProps {
   controls: Control[];
+  testAttributesCounts: Record<string, number>;
 }
 
-export default function RACMTable({ controls }: RACMTableProps) {
+export default function RACMTable({ controls, testAttributesCounts }: RACMTableProps) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -49,6 +50,9 @@ export default function RACMTable({ controls }: RACMTableProps) {
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Automated
               </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Test Attributes
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -58,6 +62,15 @@ export default function RACMTable({ controls }: RACMTableProps) {
                 window.history.pushState({}, '', newPath);
                 window.dispatchEvent(new Event('pushstate'));
               };
+
+              const handleTestAttributesClick = (e: React.MouseEvent) => {
+                e.stopPropagation(); // Prevent row click
+                const newPath = `/portal/racm/${control.id}#test-attributes`;
+                window.history.pushState({}, '', newPath);
+                window.dispatchEvent(new Event('pushstate'));
+              };
+
+              const testAttributesCount = testAttributesCounts[control.id] || 0;
               
               return (
               <tr 
@@ -121,6 +134,14 @@ export default function RACMTable({ controls }: RACMTableProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className={`w-3 h-3 rounded-full ${control.isAutomated ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    onClick={handleTestAttributesClick}
+                    className="text-primary-600 hover:text-primary-800 hover:underline font-medium"
+                  >
+                    {testAttributesCount}
+                  </button>
                 </td>
               </tr>
               );

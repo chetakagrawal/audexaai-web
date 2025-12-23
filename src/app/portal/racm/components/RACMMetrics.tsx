@@ -2,8 +2,19 @@
 
 import React from 'react';
 import MetricCard from '@/components/portal/MetricCard';
+import { Control } from '../types';
 
-export default function RACMMetrics() {
+interface RACMMetricsProps {
+  controls: Control[];
+}
+
+export default function RACMMetrics({ controls }: RACMMetricsProps) {
+  // Calculate metrics from actual controls data
+  const totalControls = controls.length;
+  const keyControls = controls.filter(c => c.isKeyControl).length;
+  const highRiskControls = controls.filter(c => c.riskRating === 'High').length;
+  const automatedControls = controls.filter(c => c.isAutomated).length;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <MetricCard
@@ -14,7 +25,7 @@ export default function RACMMetrics() {
             </svg>
           </div>
         }
-        value="18"
+        value={totalControls.toString()}
         label="Total Controls"
       />
       <MetricCard
@@ -25,7 +36,7 @@ export default function RACMMetrics() {
             </div>
           </div>
         }
-        value="13"
+        value={keyControls.toString()}
         label="Key Controls"
       />
       <MetricCard
@@ -36,7 +47,7 @@ export default function RACMMetrics() {
             </svg>
           </div>
         }
-        value="13"
+        value={highRiskControls.toString()}
         label="High Risk Controls"
       />
       <MetricCard
@@ -45,7 +56,7 @@ export default function RACMMetrics() {
             <div className="w-6 h-6 bg-green-500 rounded-full"></div>
           </div>
         }
-        value="9"
+        value={automatedControls.toString()}
         label="Automated Controls"
       />
     </div>

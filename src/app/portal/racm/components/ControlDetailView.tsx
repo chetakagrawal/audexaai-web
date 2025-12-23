@@ -16,11 +16,41 @@ interface ControlDetailViewProps {
 
 export default function ControlDetailView({ controlId }: ControlDetailViewProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>('overview');
+  // Initialize activeTab from URL hash if present
+  const getInitialTab = (): Tab => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash === '#test-attributes') {
+        return 'test-attributes';
+      }
+    }
+    return 'overview';
+  };
+  const [activeTab, setActiveTab] = useState<Tab>(getInitialTab());
   const [control, setControl] = useState<Control | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update tab when hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#test-attributes') {
+        setActiveTab('test-attributes');
+      } else {
+        setActiveTab('overview');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    // Check initial hash
+    handleHashChange();
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
 
   // Fetch control details
   useEffect(() => {
@@ -146,7 +176,10 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => {
+                setActiveTab('overview');
+                window.location.hash = '';
+              }}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'overview'
                   ? 'border-primary-500 text-primary-600'
@@ -156,7 +189,10 @@ export default function ControlDetailView({ controlId }: ControlDetailViewProps)
               Overview
             </button>
             <button
-              onClick={() => setActiveTab('test-attributes')}
+              onClick={() => {
+                setActiveTab('test-attributes');
+                window.location.hash = 'test-attributes';
+              }}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'test-attributes'
                   ? 'border-primary-500 text-primary-600'

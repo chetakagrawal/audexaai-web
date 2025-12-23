@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import { controlsApi, applicationsApi, controlApplicationsApi } from '@/lib/api';
+import { controlsApi, applicationsApi, controlApplicationsApi, testAttributesApi } from '@/lib/api';
 import { Control, Application, ControlFormData } from './types';
 import { convertApiControlToUI, UUID_REGEX } from './racmUtils';
 import RACMBanner from './components/RACMBanner';
@@ -64,6 +64,7 @@ export default function RACMPage() {
   const [isLoadingApplications, setIsLoadingApplications] = useState(false);
   const [controls, setControls] = useState<Control[]>([]);
   const [isLoadingControls, setIsLoadingControls] = useState(true);
+  const [testAttributesCounts, setTestAttributesCounts] = useState<Record<string, number>>({});
 
   // Fetch controls on mount (only when on list view)
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function RACMPage() {
       setIsLoadingControls(true);
       const apiControls = await controlsApi.listControls();
       
-      // Fetch applications for each control in parallel
+      // Fetch applications and test attributes counts for each control in parallel
       const controlsWithApplications = await Promise.all(
         apiControls.map(async (apiControl) => {
           try {
@@ -103,6 +104,21 @@ export default function RACMPage() {
       );
       
       setControls(controlsWithApplications);
+
+      // Fetch test attributes counts for all controls in parallel
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        apiControls.map(async (apiControl) => {
+          try {
+            const testAttributes = await testAttributesApi.listTestAttributes(apiControl.id);
+            counts[apiControl.id] = testAttributes.length;
+          } catch (error) {
+            console.error(`Failed to fetch test attributes for control ${apiControl.id}:`, error);
+            counts[apiControl.id] = 0;
+          }
+        })
+      );
+      setTestAttributesCounts(counts);
     } catch (error) {
       console.error('Failed to fetch controls:', error);
     } finally {
@@ -217,7 +233,7 @@ export default function RACMPage() {
         <RACMBanner />
 
         {/* Summary Cards */}
-        <RACMMetrics />
+        <RACMMetrics controls={controls} />
 
         {/* Search and Filter */}
         <RACMFilters />
@@ -232,7 +248,7 @@ export default function RACMPage() {
             <div className="text-gray-500 mb-4">No controls yet. Create your first control to get started.</div>
           </div>
         ) : (
-          <RACMTable controls={controls} />
+          <RACMTable controls={controls} testAttributesCounts={testAttributesCounts} />
         )}
       </div>
 
