@@ -40,6 +40,14 @@ export {
   type ProjectTestAttributeOverrideUpsert,
   type EffectiveTestAttributeResponse,
 } from './projectTestAttributeOverrides';
+export {
+  pbcApi,
+  type PbcRequestResponse,
+  type PbcRequestItemResponse,
+  type PbcGenerateRequest,
+  type PbcRequestPatch,
+  type PbcRequestItemPatch,
+} from './pbc';
 
 // Shared types
 export { type ProjectControlResponse, type ApplicationResponse, type ProjectControlApplicationResponse } from './types';

@@ -60,7 +60,7 @@ export interface Control {
   is_automated: boolean;
 }
 
-export type Tab = 'overview' | 'controls' | 'line-items';
+export type Tab = 'overview' | 'controls' | 'line-items' | 'pbc';
 
 export interface LineItem {
   id: string; // composite key: `${projectControlId}-${applicationId || 'null'}-${testAttributeId}`
