@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { pbcApi, projectsApi, controlsApi, applicationsApi, type PbcRequestResponse } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ErrorDisplay from '@/components/ui/ErrorDisplay';
+import { useToast } from '@/components/ui/ToastProvider';
 import GeneratePbcModal from '../[id]/pbc/components/GeneratePbcModal';
 import StartPbcModal from '../[id]/pbc/components/StartPbcModal';
 
@@ -19,9 +21,13 @@ interface PbcRequestWithMetadata extends PbcRequestResponse {
 
 interface PbcTabProps {
   projectId: string;
+  showBackButton?: boolean;
+  onBack?: () => void;
 }
 
-export default function PbcTab({ projectId }: PbcTabProps) {
+export default function PbcTab({ projectId, showBackButton = false, onBack }: PbcTabProps) {
+  const router = useRouter();
+  const { showToast } = useToast();
   const [pbcRequests, setPbcRequests] = useState<PbcRequestWithMetadata[]>([]);
   const [projectName, setProjectName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -180,7 +186,18 @@ export default function PbcTab({ projectId }: PbcTabProps) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">PBC Requests</h2>
+            {showBackButton && onBack && (
+              <button
+                onClick={onBack}
+                className="text-gray-600 hover:text-gray-900 mb-2 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Project
+              </button>
+            )}
+            <h2 className={`font-bold text-gray-900 ${showBackButton ? 'text-3xl' : 'text-2xl'}`}>PBC Requests</h2>
             <p className="text-gray-600 mt-1">
               Manage PBC requests for {projectName}
             </p>
@@ -236,6 +253,9 @@ export default function PbcTab({ projectId }: PbcTabProps) {
                       Due Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Checks
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Updated
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -278,18 +298,37 @@ export default function PbcTab({ projectId }: PbcTabProps) {
                         <span className="text-sm text-gray-900">{formatDate(request.due_date)}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-900">{request.itemsCount}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-900">
                           {request.updated_at ? formatDate(request.updated_at) : 'Never'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {request.status === 'draft' && (
+                        {request.status === 'draft' ? (
                           <Button
                             variant="primary"
                             size="sm"
                             onClick={() => setStartingRequest(request)}
                           >
                             Start
+                          </Button>
+                        ) : request.status === 'issued' ? (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => router.push(`/portal/projects/${projectId}/pbc/${request.id}`)}
+                          >
+                            Open
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/portal/projects/${projectId}/pbc/${request.id}`)}
+                          >
+                            View
                           </Button>
                         )}
                       </td>
@@ -348,19 +387,25 @@ export default function PbcTab({ projectId }: PbcTabProps) {
                   );
                 }
 
-                // Show toast summary
+                // Show toast summary for item updates
                 if (failedCount === 0) {
-                  alert(`Updated ${updatedCount}/${items.length} checks`);
+                  showToast(`Updated ${updatedCount}/${items.length} checks`, 'success');
                 } else {
-                  alert(`Updated ${updatedCount}/${items.length} checks. ${failedCount} failed.`);
+                  showToast(`Updated ${updatedCount}/${items.length} checks. ${failedCount} failed.`, 'error');
                 }
               }
 
               setStartingRequest(null);
               await loadData();
+              
+              // Show success toast
+              showToast('PBC issued', 'success');
+              
+              // Navigate to the detail page
+              router.push(`/portal/projects/${projectId}/pbc/${startingRequest.id}`);
             } catch (err) {
               console.error('Failed to start PBC request:', err);
-              alert(`Failed to start PBC request: ${err instanceof Error ? err.message : 'Unknown error'}`);
+              showToast(`Failed to start PBC request: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
               throw err;
             }
           }}

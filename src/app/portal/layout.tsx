@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import DashboardLayout from '@/components/portal/DashboardLayout';
 import { getAuthToken } from '@/lib/api';
+import { ToastProvider } from '@/components/ui/ToastProvider';
 
 /**
  * Portal Layout with SSO status check
@@ -37,5 +38,9 @@ export default function PortalLayout({
     }
   }, [router, pathname]);
 
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <ToastProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </ToastProvider>
+  );
 }
