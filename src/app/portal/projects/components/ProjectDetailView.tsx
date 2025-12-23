@@ -7,6 +7,7 @@ import { ApplicationResponse } from '@/lib/api';
 import ProjectOverviewTab from './ProjectOverviewTab';
 import ProjectControlsTab from './ProjectControlsTab';
 import LineItemsTab from './LineItemsTab';
+import PbcTab from './PbcTab';
 import AddControlModal from './AddControlModal';
 import EditProjectModal from './EditProjectModal';
 
@@ -179,6 +180,16 @@ export default function ProjectDetailView({
             >
               Line Items
             </button>
+            <button
+              onClick={() => setActiveTab('pbc')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'pbc'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              PBC
+            </button>
           </nav>
         </div>
 
@@ -210,6 +221,7 @@ export default function ProjectDetailView({
               filterByProjectControlId={lineItemsFilterControlId}
             />
           )}
+          {activeTab === 'pbc' && <PbcTab projectId={project.id} />}
         </div>
       </div>
 
