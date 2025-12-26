@@ -97,6 +97,23 @@ export const authApi = {
   },
 
   /**
+   * Get user names for membership IDs
+   * Returns a map of membership_id -> user_name
+   */
+  async getUserNamesForMemberships(membershipIds: string[]): Promise<Record<string, string>> {
+    const memberships = await this.getTenantMemberships();
+    const nameMap: Record<string, string> = {};
+
+    memberships.forEach(membership => {
+      if (membershipIds.includes(membership.id)) {
+        nameMap[membership.id] = membership.user_name;
+      }
+    });
+
+    return nameMap;
+  },
+
+  /**
    * Logout - removes token and membership ID
    */
   logout() {

@@ -2,13 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { pbcApi, projectsApi, controlsApi, applicationsApi, type PbcRequestResponse, type PbcRequestItemResponse } from '@/lib/api';
+import { pbcApi, pbcEvidenceApi, projectsApi, controlsApi, applicationsApi, authApi, type PbcRequestResponse, type PbcRequestItemResponse, type EvidenceFile } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ErrorDisplay from '@/components/ui/ErrorDisplay';
 import { useToast } from '@/components/ui/ToastProvider';
 import ChecksTable from './components/ChecksTable';
 import EditCheckModal from './components/EditCheckModal';
+import EvidenceUploader from './components/EvidenceUploader';
+import EvidenceList from './components/EvidenceList';
+import ConfirmModal from './components/ConfirmModal';
 
 interface PbcRequestDetailPageProps {}
 
@@ -28,10 +31,16 @@ export default function PbcRequestDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [editingItem, setEditingItem] = useState<PbcRequestItemResponse | null>(null);
+  const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
+  const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
+  const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
+  const [isRemovingEvidence, setIsRemovingEvidence] = useState(false);
+  const [removingFileId, setRemovingFileId] = useState<string | null>(null);
 
   useEffect(() => {
     if (projectId && pbcRequestId) {
       loadData();
+      loadEvidence();
     }
   }, [projectId, pbcRequestId]);
 
@@ -81,6 +90,104 @@ export default function PbcRequestDetailPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadEvidence = async () => {
+    try {
+      setIsLoadingEvidence(true);
+      const files = await pbcEvidenceApi.listPbcEvidence(pbcRequestId);
+
+      // Get unique membership IDs that uploaded files
+      const membershipIds = files
+        .map(file => file.created_by_membership_id)
+        .filter((id): id is string => id !== undefined);
+
+      // Fetch user names for these membership IDs
+      let userNames: Record<string, string> = {};
+      if (membershipIds.length > 0) {
+        try {
+          userNames = await authApi.getUserNamesForMemberships(membershipIds);
+        } catch (err) {
+          console.warn('Failed to fetch uploader names:', err);
+          // Continue without uploader names if this fails
+        }
+      }
+
+      // Attach uploader names to files
+      const filesWithUploaders = files.map(file => ({
+        ...file,
+        uploaded_by: file.created_by_membership_id ? userNames[file.created_by_membership_id] : undefined,
+      }));
+
+      setEvidenceFiles(filesWithUploaders);
+    } catch (err) {
+      console.error('Failed to load evidence:', err);
+      // Don't show error toast for evidence loading failures, just log
+    } finally {
+      setIsLoadingEvidence(false);
+    }
+  };
+
+  const handleEvidenceUpload = async (files: File[]) => {
+    try {
+      setIsUploadingEvidence(true);
+      const hadEvidenceBefore = evidenceFiles.length > 0;
+      await pbcEvidenceApi.uploadPbcEvidence(pbcRequestId, files);
+      
+      // Reload evidence list to get updated state
+      await loadEvidence();
+      
+      showToast(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`, 'success');
+
+      // Optional: Update item statuses from "requested" to "received" if this is the first evidence
+      if (!hadEvidenceBefore) {
+        try {
+          const currentItems = await pbcApi.listPbcRequestItems(pbcRequestId);
+          const requestedItems = currentItems.filter((item) => item.status === 'requested');
+          
+          // Update each requested item to "received" status
+          await Promise.all(
+            requestedItems.map((item) =>
+              pbcApi.updatePbcRequestItem(item.id, { status: 'received' })
+            )
+          );
+
+          // Reload data to reflect status changes
+          if (requestedItems.length > 0) {
+            await loadData();
+          }
+        } catch (err) {
+          // Best-effort: log but don't fail the upload
+          console.warn('Failed to update item statuses after evidence upload:', err);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to upload evidence:', err);
+      showToast(`Failed to upload evidence: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
+      throw err;
+    } finally {
+      setIsUploadingEvidence(false);
+    }
+  };
+
+  const handleEvidenceRemove = async (fileId: string) => {
+    try {
+      setIsRemovingEvidence(true);
+      await pbcEvidenceApi.unlinkPbcEvidence(pbcRequestId, fileId);
+      setEvidenceFiles((prev) => prev.filter((f) => f.id !== fileId));
+      showToast('Evidence file removed', 'success');
+      setRemovingFileId(null);
+    } catch (err) {
+      console.error('Failed to remove evidence:', err);
+      showToast(`Failed to remove evidence: ${err instanceof Error ? err.message : 'Unknown error'}`, 'error');
+    } finally {
+      setIsRemovingEvidence(false);
+    }
+  };
+
+  const handleRunAnalysis = async () => {
+    // Stub for now - backend endpoint not ready
+    showToast('Analysis not implemented yet', 'info');
   };
 
   const handleItemUpdate = async (itemId: string, data: {
@@ -239,8 +346,18 @@ export default function PbcRequestDetailPage() {
 
       {/* Progress Summary */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Progress Summary</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Progress Summary</h2>
+          <Button
+            variant="primary"
+            onClick={handleRunAnalysis}
+            disabled={evidenceFiles.length === 0}
+            size="sm"
+          >
+            Run AI Analysis
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <div className="text-2xl font-bold text-gray-900">{completedCount}/{totalCount}</div>
             <div className="text-sm text-gray-600">Checks Complete</div>
@@ -248,6 +365,10 @@ export default function PbcRequestDetailPage() {
           <div>
             <div className="text-2xl font-bold text-red-600">{exceptionCount}</div>
             <div className="text-sm text-gray-600">Exceptions</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-gray-900">{evidenceFiles.length}</div>
+            <div className="text-sm text-gray-600">Files uploaded</div>
           </div>
           <div>
             <div className="text-sm text-gray-600">
@@ -265,23 +386,30 @@ export default function PbcRequestDetailPage() {
         getItemStatusColor={getItemStatusColor}
       />
 
-      {/* Evidence CTA (Stub) */}
+      {/* Evidence Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Evidence</h3>
             <p className="text-sm text-gray-600">Upload evidence files for this PBC request</p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              // Route to existing Evidence page with project context
-              router.push(`/portal/projects/${projectId}/evidence`);
-            }}
-          >
-            Upload Evidence
-          </Button>
+          <EvidenceUploader
+            onFilesSelected={handleEvidenceUpload}
+            isUploading={isUploadingEvidence}
+          />
         </div>
+
+        {isLoadingEvidence ? (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">Loading evidence...</p>
+          </div>
+        ) : (
+          <EvidenceList
+            files={evidenceFiles}
+            onRemove={(fileId) => setRemovingFileId(fileId)}
+            isRemoving={isRemovingEvidence}
+          />
+        )}
       </div>
 
       {/* Edit Check Modal */}
@@ -293,6 +421,22 @@ export default function PbcRequestDetailPage() {
           onSave={handleItemUpdate}
         />
       )}
+
+      {/* Confirm Remove Evidence Modal */}
+      <ConfirmModal
+        isOpen={removingFileId !== null}
+        title="Remove Evidence File"
+        message="Are you sure you want to remove this file from the request?"
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          if (removingFileId) {
+            handleEvidenceRemove(removingFileId);
+          }
+        }}
+        onCancel={() => setRemovingFileId(null)}
+      />
     </div>
   );
 }
