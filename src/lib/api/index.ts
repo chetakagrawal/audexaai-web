@@ -48,6 +48,11 @@ export {
   type PbcRequestPatch,
   type PbcRequestItemPatch,
 } from './pbc';
+export {
+  pbcEvidenceApi,
+  type EvidenceFile,
+  type UploadEvidenceResponse,
+} from './pbcEvidence';
 
 // Shared types
 export { type ProjectControlResponse, type ApplicationResponse, type ProjectControlApplicationResponse } from './types';
